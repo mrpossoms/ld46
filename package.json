@@ -24,6 +24,7 @@
   "homepage": "https://github.com/mrpossoms/g.js#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "parse-magica-voxel": "^1.0.3",
     "socket.io": "^2.2.0"
   }
 }

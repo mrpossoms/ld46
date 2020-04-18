@@ -1,4 +1,5 @@
 const g = require('./static/js/g.js');
+const vox_parser = require('parse-magica-voxel')
 
 module.exports.server = {
 	// map of all connected players

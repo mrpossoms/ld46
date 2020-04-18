@@ -472,6 +472,34 @@ g.web = {
 						indices: [],
 					};
 
+					// convert to uniform data storage
+					if (voxel_data.SIZE)
+					{
+						cells = new Array(vox.SIZE.x);
+						for (var xi = vox.SIZE.x; xi--;)
+						{
+							cells[xi] = new Array(vox.SIZE.y);
+							for (var yi = vox.SIZE.y; yi--;)
+							{
+								cells[xi][yi] = new Array(vox.SIZE.z);
+								cells.fill(0);
+							}
+						}
+
+						for (var vi = vox.XYZI.length; vi--;)
+						{
+							const set = vox.XYZI[vi];
+							cells[set.x][set.y][set.z] = set.c;
+						}
+
+						voxel_data = {
+							width: vox.SIZE.x,
+							height: vox.SIZE.y,
+							depth: vox.SIZE.z,
+							cells: cells
+						};
+					}
+
 					const w = voxel_data.width;
 					const h = voxel_data.height;
 					const d = voxel_data.depth;
