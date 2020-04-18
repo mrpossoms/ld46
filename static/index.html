@@ -6,9 +6,24 @@
 <script type="text/javascript" src="js/g.web.js" charset="UTF-8"></script>
 <script type="text/javascript">
 
+const k = {
+    mouse: {
+        sensitivity: 0.005
+    }
+};
+
+var game = {
+    state: {
+        player: {
+            cam: new g.web.gfx.camera(),
+            yaw: 0,
+            pitch: 0
+        }
+    }
+}
+
 function on_load()
 {
-
 
 var cam = new g.web.gfx.camera();
 var plane_pos = [ 0, 0, 0 ];
@@ -40,7 +55,7 @@ g.initialize(function ()
         );
 
         // g.web.assets['mesh/plane'] = g.web.gfx.mesh.create(g.web.assets["meshes/plane.json"]);
-        g.web.assets['mesh/cube'] = g.web.gfx.mesh.create(g.web.assets['meshes/exported-cube.json']);
+        g.web.assets['mesh/teapot'] = g.web.gfx.mesh.create(g.web.assets['meshes/exported-cube.json']);
         g.web.assets['tex/stars'] = g.web.gfx.texture.repeating()
                                                      .pixelated()
                                                      .create(g.web.assets["imgs/stars.jpg"])
@@ -53,9 +68,18 @@ g.initialize(function ()
 
 g.web.pointer.on_move(function (event)
 {
-    cam.q = cam.q.quat_mul([].quat_rotation([0, 1, 0], -event.movementX / 100));
-    cam.q = cam.q.quat_mul([].quat_rotation([1, 0, 0], -event.movementY / 100));
-    // console.log([event.movementX, event.movementY]);s
+    game.state.player.yaw += event.movementx * k.mouse.sensitivity;
+    const dp = -event.movementY * k.mouse.sensitivity;
+
+    if (game.state.player.pitch + dp < -Math.PI / 4 &&
+        game.state.player.pitch + dp >  Math.PI / 4)
+    {
+        game.state.player.pitch += dp;
+    }
+
+    var q = [].quat_mul([].quat_rotation([0, 1, 0], game.state.player.yaw));
+    q = q.quat_mul([].quat_rotation([1, 0, 0], game.state.player.pitch));
+    game.state.player.cam.orientation(q);
 });
 
 
