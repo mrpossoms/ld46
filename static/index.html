@@ -17,21 +17,14 @@ var game = {
         player: {
             cam: new g.web.gfx.camera(),
             yaw: 0,
-            pitch: 0
+            pitch: 0,
+            heading: function() { return [].quat_rotation([0, 1, 0], this.yaw).quat_rotate_vector([0, 0, 1]); }
         }
     }
 }
 
 function on_load()
 {
-
-var cam = new g.web.gfx.camera();
-var plane_pos = [ 0, 0, 0 ];
-var plane_q = [0, 0, 0, 1];
-
-cam.view([0, 0, 0], [0, 0, 0], [0, 1, 0]);
-cam.position = [0, 0, -2];
-cam.q = [0, 0, 0, 1];
 
 g.web.canvas(document.getElementsByTagName('canvas')[0]);
 
@@ -46,6 +39,8 @@ g.initialize(function ()
     'meshes/plane.json',
     'meshes/exported-cube.json'
     ];
+
+    game.state.player.cam.perspective();
 
     g.web.assets.load(asset_list,
     function() {
@@ -68,16 +63,16 @@ g.initialize(function ()
 
 g.web.pointer.on_move(function (event)
 {
-    game.state.player.yaw += event.movementx * k.mouse.sensitivity;
+    game.state.player.yaw += event.movementX * k.mouse.sensitivity;
     const dp = -event.movementY * k.mouse.sensitivity;
 
-    if (game.state.player.pitch + dp < -Math.PI / 4 &&
-        game.state.player.pitch + dp >  Math.PI / 4)
+    if (game.state.player.pitch + dp > -Math.PI / 4 &&
+        game.state.player.pitch + dp <  Math.PI / 4)
     {
         game.state.player.pitch += dp;
     }
 
-    var q = [].quat_mul([].quat_rotation([0, 1, 0], game.state.player.yaw));
+    var q = [].quat_rotation([0, 1, 0], game.state.player.yaw);
     q = q.quat_mul([].quat_rotation([1, 0, 0], game.state.player.pitch));
     game.state.player.cam.orientation(q);
 });
@@ -91,17 +86,18 @@ g.web.on_message(function (msg)
 
 g.update(function (dt)
 {
-    const forward = cam.q.quat_rotate_vector([0, 0, -1]);
-    const up = cam.q.quat_rotate_vector([0, 1, 0]);
-    const right = forward.cross(up);
+    const forward = game.state.player.heading();
+    const left = game.state.player.cam.left();
+    var pos = game.state.player.cam.position();
 
-	if (g.web.key.is_pressed('w')) { cam.position = cam.position.add(forward.mul(-dt)); }
-    if (g.web.key.is_pressed('s')) { cam.position = cam.position.add(forward.mul(dt)); }
-    if (g.web.key.is_pressed('a')) { cam.position = cam.position.add(right.mul(dt)); }
-    if (g.web.key.is_pressed('d')) { cam.position = cam.position.add(right.mul(-dt)); }
+	if (g.web.key.is_pressed('w')) { pos = pos.add(forward.mul(dt)); }
+    if (g.web.key.is_pressed('s')) { pos = pos.add(forward.mul(-dt)); }
+    if (g.web.key.is_pressed('a')) { pos = pos.add(left.mul(-dt)); }
+    if (g.web.key.is_pressed('d')) { pos = pos.add(left.mul(dt)); }
 
     plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
-    cam._view = [].view(cam.position.sub(forward), forward, up);
+
+    game.state.player.cam.position(pos);
     // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
 });
 
@@ -114,19 +110,18 @@ g.web.draw(function (dt)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const mesh = g.web.assets['mesh/cube'];
+    const mesh = g.web.assets['mesh/teapot'];
 
     // cam.perspective();
-    cam.orthographic();
 
-    plane_q = plane_q.quat_mul([].quat_rotation([0, 0, 1], dt));
+    // plane_q = plane_q.quat_mul([].quat_rotation([0, 0, 1], dt));
 
     // cam._view = cam.q.quat_to_matrix();
 
     mesh.using_shader('basic_textured')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
-        .with_camera(cam)
+        .with_camera(game.state.player.cam)
         .set_uniform('u_model').mat4([].I(4))
         // .set_uniform('u_model').mat4(cam.q.quat_to_matrix())
         .set_uniform('u_texture').texture(g.web.assets['tex/stars'])
