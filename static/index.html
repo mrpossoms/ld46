@@ -1,0 +1,121 @@
+<html>
+<head>
+<link href="css/style.css" rel="stylesheet">
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="js/g.js" charset="UTF-8"></script>
+<script type="text/javascript" src="js/g.web.js" charset="UTF-8"></script>
+<script type="text/javascript">
+
+function on_load()
+{
+
+
+var cam = new g.web.gfx.camera();
+var plane_pos = [ 0, 0, 0 ];
+var plane_q = [0, 0, 0, 1];
+
+cam.view([0, 0, 0], [0, 0, 0], [0, 1, 0]);
+cam.position = [0, 0, -2];
+cam.q = [0, 0, 0, 1];
+
+g.web.canvas(document.getElementsByTagName('canvas')[0]);
+
+g.initialize(function ()
+{
+    g.is_running = false;
+
+    const asset_list = [
+    'shaders/basic_textured.vert',
+    'shaders/basic_textured.frag',
+    'imgs/stars.jpg',
+    'meshes/plane.json',
+    'meshes/exported-cube.json'
+    ];
+
+    g.web.assets.load(asset_list,
+    function() {
+        g.web.gfx.shader.create('basic_textured',
+            g.web.assets['shaders/basic_textured.vert'],
+            g.web.assets['shaders/basic_textured.frag']
+        );
+
+        // g.web.assets['mesh/plane'] = g.web.gfx.mesh.create(g.web.assets["meshes/plane.json"]);
+        g.web.assets['mesh/cube'] = g.web.gfx.mesh.create(g.web.assets['meshes/exported-cube.json']);
+        g.web.assets['tex/stars'] = g.web.gfx.texture.repeating()
+                                                     .pixelated()
+                                                     .create(g.web.assets["imgs/stars.jpg"])
+        g.is_running = true;
+    });
+
+	return true;
+});
+
+
+g.web.pointer.on_move(function (event)
+{
+    cam.q = cam.q.quat_mul([].quat_rotation([0, 1, 0], -event.movementX / 100));
+    cam.q = cam.q.quat_mul([].quat_rotation([1, 0, 0], -event.movementY / 100));
+    // console.log([event.movementX, event.movementY]);s
+});
+
+
+g.web.on_message(function (msg)
+{
+
+});
+
+
+g.update(function (dt)
+{
+    const forward = cam.q.quat_rotate_vector([0, 0, -1]);
+    const up = cam.q.quat_rotate_vector([0, 1, 0]);
+    const right = forward.cross(up);
+
+	if (g.web.key.is_pressed('w')) { cam.position = cam.position.add(forward.mul(-dt)); }
+    if (g.web.key.is_pressed('s')) { cam.position = cam.position.add(forward.mul(dt)); }
+    if (g.web.key.is_pressed('a')) { cam.position = cam.position.add(right.mul(dt)); }
+    if (g.web.key.is_pressed('d')) { cam.position = cam.position.add(right.mul(-dt)); }
+
+    plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
+    cam._view = [].view(cam.position.sub(forward), forward, up);
+    // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
+});
+
+var t = 0;
+
+g.web.draw(function (dt)
+{
+    t += dt;
+    if (g.is_running == false) { return; }
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const mesh = g.web.assets['mesh/cube'];
+
+    // cam.perspective();
+    cam.orthographic();
+
+    plane_q = plane_q.quat_mul([].quat_rotation([0, 0, 1], dt));
+
+    // cam._view = cam.q.quat_to_matrix();
+
+    mesh.using_shader('basic_textured')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .with_camera(cam)
+        .set_uniform('u_model').mat4([].I(4))
+        // .set_uniform('u_model').mat4(cam.q.quat_to_matrix())
+        .set_uniform('u_texture').texture(g.web.assets['tex/stars'])
+        .draw_tris();
+});
+
+g.start();
+}
+
+</script>
+</head>
+
+<body style="margin:0" onload="on_load()">
+<canvas style="padding:0;margin:0;width:100%;height:100%"></canvas>
+</body>
+</html>
