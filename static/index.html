@@ -9,6 +9,9 @@
 const k = {
     mouse: {
         sensitivity: 0.005
+    },
+    player: {
+        speed: 10
     }
 };
 
@@ -16,8 +19,11 @@ var game = {
     state: {
         player: {
             cam: new g.web.gfx.camera(),
+            pos: [-32, -14, -32],
+            vel: [0, 0, 0],
             yaw: 0,
             pitch: 0,
+            bobble: 0,
             heading: function() { return [].quat_rotation([0, 1, 0], this.yaw).quat_rotate_vector([0, 0, 1]); }
         }
     }
@@ -33,20 +39,21 @@ g.initialize(function ()
     g.is_running = false;
 
     const asset_list = [
-    'shaders/basic_textured.vert',
-    'shaders/basic_textured.frag',
+    'shaders/basic_colored.vert',
+    'shaders/basic_colored.frag',
     'imgs/stars.jpg',
     'meshes/plane.json',
-    'meshes/exported-cube.json'
+    'voxels/apt.json'
     ];
 
     game.state.player.cam.perspective();
+    game.state.player.cam.position(game.state.player.pos);
 
     g.web.assets.load(asset_list,
     function() {
-        g.web.gfx.shader.create('basic_textured',
-            g.web.assets['shaders/basic_textured.vert'],
-            g.web.assets['shaders/basic_textured.frag']
+        g.web.gfx.shader.create('basic_colored',
+            g.web.assets['shaders/basic_colored.vert'],
+            g.web.assets['shaders/basic_colored.frag']
         );
 
         // g.web.assets['mesh/plane'] = g.web.gfx.mesh.create(g.web.assets["meshes/plane.json"]);
@@ -55,11 +62,16 @@ g.initialize(function ()
                                                      .pixelated()
                                                      .create(g.web.assets["imgs/stars.jpg"])
         g.is_running = true;
+        gl.getExtension('OES_element_index_uint');
     });
 
 	return true;
 });
 
+g.web.pointer.on_press(function ()
+{
+    g.web._canvas.requestPointerLock();
+});
 
 g.web.pointer.on_move(function (event)
 {
@@ -88,16 +100,31 @@ g.update(function (dt)
 {
     const forward = game.state.player.heading();
     const left = game.state.player.cam.left();
-    var pos = game.state.player.cam.position();
+    var pos = game.state.player.pos;
+    var vel = [0, 0, 0];
 
-	if (g.web.key.is_pressed('w')) { pos = pos.add(forward.mul(dt)); }
-    if (g.web.key.is_pressed('s')) { pos = pos.add(forward.mul(-dt)); }
-    if (g.web.key.is_pressed('a')) { pos = pos.add(left.mul(-dt)); }
-    if (g.web.key.is_pressed('d')) { pos = pos.add(left.mul(dt)); }
+    var moving = false;
+	if (g.web.key.is_pressed('w')) { moving = true; vel = vel.add(forward.mul(dt * k.player.speed)); }
+    if (g.web.key.is_pressed('s')) { moving = true; vel = vel.add(forward.mul(-dt * k.player.speed)); }
+    if (g.web.key.is_pressed('a')) { moving = true; vel = vel.add(left.mul(-dt * k.player.speed)); }
+    if (g.web.key.is_pressed('d')) { moving = true; vel = vel.add(left.mul(dt * k.player.speed)); }
+
+    if (moving)
+    {
+        game.state.player.bobble += dt * 10;
+    }
+    else
+    {
+        vel = game.state.player.vel.mul(0.9);
+    }
 
     plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
 
-    game.state.player.cam.position(pos);
+    game.state.player.vel = vel;
+    game.state.player.pos = pos.add(vel);
+    var sway = [0, Math.sin(game.state.player.bobble), 0].add(left.mul(Math.cos(game.state.player.bobble * 0.5)));
+
+    game.state.player.cam.position(pos.add(sway.mul(0.5)));
     // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
 });
 
@@ -110,7 +137,7 @@ g.web.draw(function (dt)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const mesh = g.web.assets['mesh/teapot'];
+    const mesh = g.web.assets['voxel/apt'];
 
     // cam.perspective();
 
@@ -118,9 +145,10 @@ g.web.draw(function (dt)
 
     // cam._view = cam.q.quat_to_matrix();
 
-    mesh.using_shader('basic_textured')
+    mesh.using_shader('basic_colored')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
-        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
+        .with_attribute({name:'a_color', buffer: 'colors', components: 3})
         .with_camera(game.state.player.cam)
         .set_uniform('u_model').mat4([].I(4))
         // .set_uniform('u_model').mat4(cam.q.quat_to_matrix())

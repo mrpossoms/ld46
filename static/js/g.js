@@ -364,6 +364,10 @@ Array.prototype.as_Float32Array = function() {
 	return new Float32Array(this.flatten());
 };
 
+Array.prototype.as_Int32Array = function(first_argument) {
+	return new Int32Array(this.flatten());
+};
+
 Array.prototype.as_Int16Array = function(first_argument) {
 	return new Int16Array(this.flatten());
 };
