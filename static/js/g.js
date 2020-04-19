@@ -50,6 +50,7 @@ const g = {
 
 			g.web.socket = function() { return g.web._socket; }
             if (!g.web.gfx._initalize()) { return; }
+            g.web.snd._initalize();
 		}
 
  		// custom initialization

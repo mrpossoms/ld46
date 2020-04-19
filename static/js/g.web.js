@@ -3,6 +3,7 @@ g.web = {
 	_on_message: function() {},
 	_on_event: {},
 	_canvas: null,
+	_audio_ctx: null,
 
 	gfx: {
 		_initalize: function()
@@ -480,8 +481,6 @@ g.web = {
 				{
 					var palette = null;
 
-
-
 					// convert to uniform data storage
 					if (voxel_data.SIZE)
 					{
@@ -747,7 +746,23 @@ g.web = {
 			}
 		}
 	},
-
+	snd: {
+		_initalize: function()
+		{
+			const AudioContext = window.AudioContext || window.webkitAudioContext;
+			g.web._audio_ctx = new AudioContext();
+		},
+		listener:
+		{
+			from_camera: function(cam)
+			{
+				const f = cam.forward(), u = cam.up();
+				const p = cam.position();
+				g.web._audio_ctx.listener.setOrientation(f[0], f[1], f[2], u[0], u[1], u[2]);
+				g.web._audio_ctx.listener.setPosition(p[0], p[1], p[2]);
+			}
+		}
+	},
 	assets: {
 		load: function(asset_arr, on_finish)
 		{
@@ -790,7 +805,52 @@ g.web = {
 
 						case 'audio':
 						{
-							g.web.assets[path] = new Audio(res.url);
+							const fields = path.split('.');
+							const name = fields[0];
+							const sound_name = name.replace('sounds', 'sound');
+
+							g.web.assets[sound_name] = function (pos)
+							{
+								var ctx = g.web._audio_ctx;
+								this.audio = new Audio(res.url);
+								this.track = ctx.createMediaElementSource(this.audio);
+								this.panner = ctx.createPanner();
+								this.gain_node = ctx.createGain();
+								this.gain_node.gain.value = 2;
+								this.track.connect(this.gain_node).connect(this.panner).connect(ctx.destination);
+								this.panner.setPosition(pos[0], pos[1], pos[2]);
+
+								this.is_playing = function() { return !this.audio.paused && !this.audio.ended; }
+								this.loop = function(loop)
+								{
+									this.audio.loop = loop;
+								}
+								this.speed = function(speed)
+								{
+									if (this.audio.playbackRate == speed) { return; }
+									this.audio.playbackRate = speed;
+								}
+								this.position = function(pos)
+								{
+									this.panner.setPosition(pos[0], pos[1], pos[2]);
+								}
+								this.play = function()
+								{
+									this.audio.play();
+								}
+								this.resume = function()
+								{
+									this.audio.resume();
+								}
+								this.pause = function()
+								{
+									this.audio.pause();
+								}
+								this.gain = function(g)
+								{
+									this.gain_node.gain.value = g;
+								}
+							}
 							console.log('Finished: ' + path);
 						} break;
 					}

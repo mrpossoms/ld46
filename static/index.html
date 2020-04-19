@@ -29,6 +29,7 @@ var game = {
             yaw: 0,
             pitch: 0,
             bobble: 0,
+            sound: {},
             heading: function() { return [].quat_rotation([0, 1, 0], this.yaw).quat_rotate_vector([0, 0, 1]); }
         },
         bb_boi: {
@@ -36,6 +37,7 @@ var game = {
             pizza: 1,
             bed_pan: 0,
             mtn_dew: 1,
+            sound: {},
             rates: {
                 pizza_s: 0.01,
                 bed_pan_s: 0.75,
@@ -126,7 +128,21 @@ g.initialize(function ()
     'voxels/apt.json',
     'voxels/cup.json',
     'animations/mom-walk.json',
-    'image/mom-walk.pixelated.clamped.png'
+    'image/mom-walk.pixelated.clamped.png',
+    'sounds/angry-boi.m4a',
+    'sounds/big-boy-mommy.m4a',
+    // 'sounds/burp-0.m4a',
+    // 'sounds/burp-1.m4a',
+    // 'sounds/burp-2.m4a',
+    // 'sounds/cracking-a-cold-one.m4a',
+    'sounds/fap.m4a',
+    'sounds/gaming.m4a',
+    'sounds/mom-comming.m4a',
+    'sounds/mtn-dew.m4a',
+    'sounds/pizza.m4a',
+    'sounds/shuffle.m4a',
+    'sounds/slurp.m4a',
+    'sounds/toilet.m4a'
     ];
 
     game.state.player.cam.perspective();
@@ -148,7 +164,23 @@ g.initialize(function ()
         gl.getExtension('OES_element_index_uint');
         gl.enable(gl.BLEND);
 
-        game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
+        // game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
+
+        // game.test_sound = new g.web.assets['sound/angry-boi']([32, 13, 20]);
+        // game.test_sound.play();
+
+        game.state.player.sound.shuffle = new g.web.assets['sound/shuffle']([32, 14, 32]);
+        game.state.player.sound.shuffle.gain(0.75);
+        game.state.player.sound.shuffle.loop(true);
+        // game.state.player.sound.shuffle.play();
+
+        game.state.bb_boi.sound.fap = new g.web.assets['sound/fap']([25, 7, 40]);
+        game.state.bb_boi.sound.fap.gain(4);
+
+        game.state.bb_boi.sound.gaming = new g.web.assets['sound/gaming']([25, 7, 40]);
+        game.state.bb_boi.sound.gaming.loop(true);
+        game.state.bb_boi.sound.gaming.gain(4);
+        game.state.bb_boi.sound.gaming.play();
     });
 
 	return true;
@@ -230,6 +262,8 @@ function player_movement(dt)
 
     var moving = false;
     var speed = k.player.speed;
+    var went_upstairs = false;
+
     if (g.web.key.is_pressed('shift'))
     {
         speed *= k.player.sprint;
@@ -245,13 +279,22 @@ function player_movement(dt)
     if (g.web.key.is_pressed('a')) { moving = true; vel = vel.add(left.mul(dt * speed)); }
     if (g.web.key.is_pressed('d')) { moving = true; vel = vel.add(left.mul(-dt * speed)); }
 
+    game.state.player.sound.shuffle.speed(speed / 10);
     if (moving)
     {
         game.state.player.bobble += dt * 10;
+
+        if (!game.state.player.sound.shuffle.is_playing())
+        {
+            game.state.player.sound.shuffle.play();            
+        }
+
+        game.state.player.sound.shuffle.position(game.state.player.cam.position());
     }
     else
     {
         vel = game.state.player.vel.mul(0.9);
+        if (game.state.player.sound.shuffle.is_playing()) { game.state.player.sound.shuffle.pause(); }
     }
 
     // check collision
@@ -294,6 +337,12 @@ function player_movement(dt)
         game.state.player.pos = tmp_pos;
     }
 
+    // play sounds when the player goes upstairs
+    if (tmp_pos[1] > 25 && pos[1] <= 25)
+    {
+        if (Math.random() < 0.25) game.state.bb_boi.sound.fap.play();
+    }
+
     game.state.player.interp_pos = game.state.player.interp_pos.lerp(tmp_pos, 0.25);
     game.state.player.interp_fov = game.state.player.interp_fov * 0.95 + game.state.player.fov * 0.05;
 
@@ -301,6 +350,7 @@ function player_movement(dt)
 
     game.state.player.cam.perspective(game.state.player.interp_fov);
     game.state.player.cam.position(game.state.player.interp_pos.add(sway.mul(0.5).add([0, 14, 0])));
+    g.web.snd.listener.from_camera(game.state.player.cam);
 }
 
 function player_grabbed_item()
