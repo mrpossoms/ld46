@@ -126,6 +126,7 @@ g.initialize(function ()
     'shaders/animated_sprite.frag',
     'meshes/plane.json',
     'voxels/apt.json',
+    'voxels/bb-boi.json',
     'voxels/cup.json',
     'animations/mom-walk.json',
     'image/mom-walk.pixelated.clamped.png',
@@ -185,7 +186,7 @@ g.initialize(function ()
 
         game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 7, 40]);
         game.state.bb_boi.sound.basement.loop(true);
-        game.state.bb_boi.sound.basement.gain(1);
+        game.state.bb_boi.sound.basement.gain(0.5);
         game.state.bb_boi.sound.basement.play();
     });
 
@@ -203,6 +204,7 @@ g.web.pointer.on_press(function (e)
             if (player.grabbed_item)
             {
                 player.grabbed_item.vel = player.cam.forward().mul(-60);
+                player.grabbed_item.ori = [0, 0, 0, 1];
                 player.grabbed_item = null;
             }
             else
@@ -225,6 +227,7 @@ g.web.pointer.on_press(function (e)
             if (player.grabbed_item)
             {
                 player.grabbed_item.vel = player.cam.forward().mul(-1);
+                player.grabbed_item.ori = [0, 0, 0, 1];
                 player.grabbed_item = null;
             }
             break;
@@ -410,7 +413,15 @@ g.web.draw(function (dt)
         .with_attribute({name:'a_color', buffer: 'colors', components: 3})
         .with_camera(game.state.player.cam)
         .set_uniform('u_model').mat4([].I(4))
-        .set_uniform('u_texture').texture(g.web.assets['tex/stars'])
+        .draw_tris();
+
+    asset['voxel/bb-boi']
+        .using_shader('basic_colored')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
+        .with_attribute({name:'a_color', buffer: 'colors', components: 3})
+        .with_camera(game.state.player.cam)
+        .set_uniform('u_model').mat4([].translate([12, 1, 26]))
         .draw_tris();
 
     for (var i = game.state.items.length; i--;)
