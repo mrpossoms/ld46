@@ -129,6 +129,9 @@ g.initialize(function ()
     'voxels/apt.json',
     'voxels/bb-boi.json',
     'voxels/cup.json',
+    'voxels/item-diaper.json',
+    'voxels/item-pizza.json',
+    'voxels/item-dew.json',
     'animations/hands.json',
     'image/hands.pixelated.clamped.png',
     'sounds/angry-boi.m4a',
@@ -170,7 +173,7 @@ g.initialize(function ()
         game.state.player.hands = new g.web.assets['animation/hands']();
         game.state.player.hands.set('Walk');
 
-        game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
+        game.state.items.push(new game_item('voxel/item-diaper', [32, 13, 20]));
 
         // game.test_sound = new g.web.assets['sound/angry-boi']([32, 13, 20]);
         // game.test_sound.play();
@@ -217,7 +220,7 @@ g.web.pointer.on_press(function (e)
                 {
                     var item = game.state.items[i];
                     const pos = player.cam.position();
-                    const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2);
+                    const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 4);
                     if (t !== false && t.len() < 14)
                     {
                         player.grabbed_item = item;
