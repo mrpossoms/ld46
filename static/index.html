@@ -120,9 +120,13 @@ g.initialize(function ()
     const asset_list = [
     'shaders/basic_colored.vert',
     'shaders/basic_colored.frag',
+    'shaders/animated_sprite.vert',
+    'shaders/animated_sprite.frag',
     'meshes/plane.json',
     'voxels/apt.json',
-    'voxels/cup.json'
+    'voxels/cup.json',
+    'animations/mom-walk.json',
+    'image/mom-walk.pixelated.clamped.png'
     ];
 
     game.state.player.cam.perspective();
@@ -135,11 +139,14 @@ g.initialize(function ()
             g.web.assets['shaders/basic_colored.frag']
         );
 
-        // g.web.assets['mesh/plane'] = g.web.gfx.mesh.create(g.web.assets["meshes/plane.json"]);
-        g.web.assets['mesh/teapot'] = g.web.gfx.mesh.create(g.web.assets['meshes/exported-cube.json']);
+        g.web.gfx.shader.create('animated_sprite',
+            g.web.assets['shaders/animated_sprite.vert'],
+            g.web.assets['shaders/animated_sprite.frag']
+        );
 
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
+        gl.enable(gl.BLEND);
 
         game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
     });
@@ -147,30 +154,45 @@ g.initialize(function ()
 	return true;
 });
 
-g.web.pointer.on_press(function ()
+g.web.pointer.on_press(function (e)
 {
     g.web._canvas.requestPointerLock();
     var player = game.state.player;
-    if (player.grabbed_item)
+
+    switch(e.button)
     {
-        player.grabbed_item.vel = player.cam.forward().mul(-60);
-        player.grabbed_item = null;
-    }
-    else
-    {
-        for (var i = game.state.items.length; i--;)
-        {
-            var item = game.state.items[i];
-            const pos = player.cam.position();
-            const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2);
-            if (t !== false && t.len() < 14)
+        case 0:
+            if (player.grabbed_item)
             {
-                player.grabbed_item = item;
-                item.vel = [0,0,0];
-                break;
+                player.grabbed_item.vel = player.cam.forward().mul(-60);
+                player.grabbed_item = null;
             }
-        }
+            else
+            {
+                for (var i = game.state.items.length; i--;)
+                {
+                    var item = game.state.items[i];
+                    const pos = player.cam.position();
+                    const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2);
+                    if (t !== false && t.len() < 14)
+                    {
+                        player.grabbed_item = item;
+                        item.vel = [0,0,0];
+                        break;
+                    }
+                }
+            }
+            break;
+        case 2:
+            if (player.grabbed_item)
+            {
+                player.grabbed_item.vel = player.cam.forward().mul(-1);
+                player.grabbed_item = null;
+            }
+            break;
     }
+
+
 });
 
 g.web.pointer.on_move(function (event)
@@ -322,9 +344,11 @@ g.web.draw(function (dt)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const mesh = g.web.assets['voxel/apt'];
+    const asset = g.web.assets
+    
 
-    mesh.using_shader('basic_colored')
+    asset['voxel/apt']
+        .using_shader('basic_colored')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
         .with_attribute({name:'a_color', buffer: 'colors', components: 3})
@@ -337,6 +361,24 @@ g.web.draw(function (dt)
     {
         game.state.items[i].draw();
     }
+
+    gl.disable(gl.DEPTH_TEST);
+
+    var sprite = asset['animation/mom-walk'];
+    asset['mesh/plane']
+        .using_shader('animated_sprite')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .set_uniform('u_sprite_sheet').texture(asset['image/mom-walk'])
+        .set_uniform('u_model').mat4([].translate([0, -0.5, 0]))
+        .set_uniform('u_proj').mat4([].I(4))
+        .set_uniform('u_view').mat4([].I(4))
+        .set_uniform('u_origin_size').vec4([0, 0, 0.1, 1])
+        // .set_uniform('u_origin_size').vec4(sprite.origin().concat(sprite.size()))
+        .draw_tri_strip();
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 });
 
 g.start();

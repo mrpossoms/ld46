@@ -815,6 +815,11 @@ g.web = {
 									const mesh_name = path.replace('voxels', 'voxel').replace('.json', '');
 									g.web.assets[mesh_name] = g.web.gfx.mesh.generate.from_voxels(g.web.assets[path]);
 								}
+								else if (path.indexOf('animations') > -1)
+								{
+									const animation_name = path.replace('animations', 'animation').replace('.json', '');
+									g.web.assets[animation_name] = g.web.gfx.sprite.create(g.web.assets[path]);	
+								}
 
 								console.log('Finished OK: ' + path);
 							});
