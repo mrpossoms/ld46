@@ -131,10 +131,10 @@ g.initialize(function ()
     'image/mom-walk.pixelated.clamped.png',
     'sounds/angry-boi.m4a',
     'sounds/big-boy-mommy.m4a',
-    // 'sounds/burp-0.m4a',
-    // 'sounds/burp-1.m4a',
-    // 'sounds/burp-2.m4a',
-    // 'sounds/cracking-a-cold-one.m4a',
+    'sounds/burp-0.m4a',
+    'sounds/burp-1.m4a',
+    'sounds/burp-2.m4a',
+    'sounds/cracking-a-cold-one.m4a',
     'sounds/fap.m4a',
     'sounds/gaming.m4a',
     'sounds/mom-comming.m4a',
@@ -142,7 +142,8 @@ g.initialize(function ()
     'sounds/pizza.m4a',
     'sounds/shuffle.m4a',
     'sounds/slurp.m4a',
-    'sounds/toilet.m4a'
+    'sounds/toilet.m4a',
+    'sounds/basement.mp3'
     ];
 
     game.state.player.cam.perspective();
@@ -164,7 +165,7 @@ g.initialize(function ()
         gl.getExtension('OES_element_index_uint');
         gl.enable(gl.BLEND);
 
-        // game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
+        game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
 
         // game.test_sound = new g.web.assets['sound/angry-boi']([32, 13, 20]);
         // game.test_sound.play();
@@ -181,6 +182,11 @@ g.initialize(function ()
         game.state.bb_boi.sound.gaming.loop(true);
         game.state.bb_boi.sound.gaming.gain(4);
         game.state.bb_boi.sound.gaming.play();
+
+        game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 7, 40]);
+        game.state.bb_boi.sound.basement.loop(true);
+        game.state.bb_boi.sound.basement.gain(1);
+        game.state.bb_boi.sound.basement.play();
     });
 
 	return true;
