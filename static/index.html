@@ -41,11 +41,54 @@ var game = {
                 mtn_dew_s: 0.04
             },
             get_daipies: function() { return 1; }
-        }
+        },
+        items: []
     }
 }
 
-function on_load()
+function game_item(asset_name, pos)
+{
+    this.pos = pos;
+    this.vel = [0, 0, 0];
+    this.name = asset_name;
+    this.asset = g.web.assets[asset_name];
+
+    this.tick = function(dt)
+    {
+        const space = g.web.assets['voxel/apt'].cells;
+        const x_t0 = Math.floor(this.pos[0]), y_t0 = Math.floor(this.pos[1]), z_t0 = Math.floor(this.pos[2]);
+        var tmp_pos = this.pos.add(this.vel.mul(dt));
+        const x_t1 = Math.floor(tmp_pos[0]), y_t1 = Math.floor(tmp_pos[1]), z_t1 = Math.floor(tmp_pos[2]);
+        const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
+        //return;
+        this.vel = this.vel.add([0, -9.8 * 8 * dt, 0]);
+
+        if (space[x_t1][Math.max(0, y_t1)][z_t1])
+        {
+            const l = this.vel.mul(-1);
+            this.vel = (n.mul(2 * n.dot(l)).sub(l));
+            this.vel = this.vel.sub(this.vel.mul(0.5));
+        }
+        else 
+        {
+            this.pos = tmp_pos;
+        }
+    };
+
+    this.draw = function()
+    {
+        const model = [].translate(this.pos);//.transpose();
+        this.asset.using_shader('basic_colored')
+                  .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+                  .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
+                  .with_attribute({name:'a_color', buffer: 'colors', components: 3})
+                  .with_camera(game.state.player.cam)
+                  .set_uniform('u_model').mat4(model)
+                  .draw_tris();
+    }
+}
+
+function on_load(space)
 {
 
 g.web.canvas(document.getElementsByTagName('canvas')[0]);
@@ -58,7 +101,8 @@ g.initialize(function ()
     'shaders/basic_colored.vert',
     'shaders/basic_colored.frag',
     'meshes/plane.json',
-    'voxels/apt.json'
+    'voxels/apt.json',
+    'voxels/cup.json'
     ];
 
     game.state.player.cam.perspective();
@@ -76,6 +120,8 @@ g.initialize(function ()
 
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
+
+        game.state.items.push(new game_item('voxel/cup', [32, 14, 20]));
     });
 
 	return true;
@@ -198,6 +244,11 @@ g.update(function (dt)
     game.state.player.cam.perspective(game.state.player.interp_fov);
     game.state.player.cam.position(game.state.player.interp_pos.add(sway.mul(0.5).add([0, 14, 0])));
     // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
+
+    for (var i = game.state.items.length; i--;)
+    {
+        game.state.items[i].tick(dt);
+    }
 });
 
 var t = 0;
@@ -226,6 +277,11 @@ g.web.draw(function (dt)
         // .set_uniform('u_model').mat4(cam.q.quat_to_matrix())
         .set_uniform('u_texture').texture(g.web.assets['tex/stars'])
         .draw_tris();
+
+    for (var i = game.state.items.length; i--;)
+    {
+        game.state.items[i].draw();
+    }
 });
 
 g.start();

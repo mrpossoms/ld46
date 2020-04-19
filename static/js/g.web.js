@@ -63,7 +63,7 @@ g.web = {
 			{
 				if (position && forward && up)
 				{
-					this._pos = position.mul(-1);
+					this._pos = position;
 					this._forward = forward.norm();
 					this._up = up.norm();
 					this._view = [].view(this._pos, this._forward, this._up);
@@ -639,7 +639,7 @@ g.web = {
 
 					var gl_mesh = g.web.gfx.mesh.create(mesh);
 					gl_mesh.cells = cells;
-					
+
 					return gl_mesh;
 				}
 			}
