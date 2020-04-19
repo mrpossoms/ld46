@@ -25,6 +25,7 @@ var game = {
             interp_pos: [32, 0, 32],
             interp_fov: Math.PI / 2,
             vel: [0, 0, 0],
+            grabbed_item: null,
             yaw: 0,
             pitch: 0,
             bobble: 0,
@@ -121,7 +122,7 @@ g.initialize(function ()
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
 
-        game.state.items.push(new game_item('voxel/cup', [32, 14, 20]));
+        game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
     });
 
 	return true;
@@ -130,6 +131,26 @@ g.initialize(function ()
 g.web.pointer.on_press(function ()
 {
     g.web._canvas.requestPointerLock();
+    var player = game.state.player;
+    if (player.grabbed_item)
+    {
+        player.grabbed_item.vel = player.cam.forward().mul(-60);
+        player.grabbed_item = null;
+    }
+    else
+    {
+        for (var i = game.state.items.length; i--;)
+        {
+            var item = game.state.items[i];
+            const pos = player.cam.position();
+            if (player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2))
+            {
+                player.grabbed_item = item;
+                item.vel = [0,0,0];
+                break;
+            }
+        }
+    }
 });
 
 g.web.pointer.on_move(function (event)
@@ -243,11 +264,17 @@ g.update(function (dt)
 
     game.state.player.cam.perspective(game.state.player.interp_fov);
     game.state.player.cam.position(game.state.player.interp_pos.add(sway.mul(0.5).add([0, 14, 0])));
-    // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
+    
+    if (game.state.player.grabbed_item)
+    {
+        game.state.player.grabbed_item.pos = game.state.player.cam.position().add(game.state.player.cam.forward().mul(-2));
+    }
 
     for (var i = game.state.items.length; i--;)
     {
-        game.state.items[i].tick(dt);
+        var item = game.state.items[i];
+        if (game.state.player.grabbed_item == item) { continue; }
+        item.tick(dt);
     }
 });
 
