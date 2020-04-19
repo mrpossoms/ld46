@@ -478,6 +478,8 @@ g.web = {
 			generate: {
 				from_voxels: function(voxel_data)
 				{
+					var palette = null;
+
 					var mesh = {
 						positions: [],
 						normals: [],
@@ -504,6 +506,13 @@ g.web = {
 						{
 							const set = voxel_data.XYZI[vi];
 							cells[set.x][set.z][set.y] = set.c;
+						}
+
+						palette = voxel_data.RGBA;
+						for (var pi = palette.length; pi--;)
+						{
+							if (!palette[pi]) { continue; }
+							palette[pi] = [palette[pi].r / 255, palette[pi].g / 255, palette[pi].b / 255];//, palette[pi].a / 255];
 						}
 
 						voxel_data = {
@@ -579,6 +588,19 @@ g.web = {
 							if (!cell_right)  mesh.texture_coords.push(  1/6, 0.00,  1/6, 1.00,  2/6, 1.00,  2/6, 0.00 ); // right
 							if (!cell_back)   mesh.texture_coords.push(  2/6, 0.00,  2/6, 1.00,  3/6, 1.00,  3/6, 0.00 ); // back
 							if (!cell_top)    mesh.texture_coords.push(  5/6, 0.00, 1.00, 0.00, 1.00, 1.00,  5/6, 1.00 ); // top
+
+							if (palette)
+							{
+								const color = palette[cell];
+								const r = color[0], g = color[1], b = color[2]
+								if (!cell_bottom) mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // bottom
+								if (!cell_left)   mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // left
+								if (!cell_front)  mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // front
+								if (!cell_right)  mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // right
+								if (!cell_back)   mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // back
+								if (!cell_top)    mesh.colors.push(r, g, b, r, g, b, r, g, b, r, g, b); // top
+
+							}
 
 							// var normals = [];
 							if (!cell_bottom) mesh.normals.push( 0,-1, 0, 0,-1, 0, 0,-1, 0, 0,-1, 0 ); // bottom
