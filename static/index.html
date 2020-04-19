@@ -29,6 +29,18 @@ var game = {
             pitch: 0,
             bobble: 0,
             heading: function() { return [].quat_rotation([0, 1, 0], this.yaw).quat_rotate_vector([0, 0, 1]); }
+        },
+        bb_boi: {
+            hp: 1,
+            pizza: 1,
+            bed_pan: 0,
+            mtn_dew: 1,
+            rates: {
+                pizza_s: 0.01,
+                bed_pan_s: 0.75,
+                mtn_dew_s: 0.04
+            },
+            get_daipies: function() { return 1; }
         }
     }
 }
@@ -96,6 +108,14 @@ g.web.on_message(function (msg)
 
 });
 
+function bb_boi_tick(boi, dt)
+{
+    const mul = boi.get_daipies();
+    const pizza_delta = boi.rates.pizza_s * mul * dt;
+    boi.pizza -= pizza_delta;
+    boi.mtn_dew -= boi.rates.mtn_dew_s * mul * dt;
+    boi.bed_pan += boi.rates.bed_pan_s * pizza_delta * dt;
+}
 
 g.update(function (dt)
 {
