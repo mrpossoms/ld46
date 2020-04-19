@@ -29,6 +29,7 @@ var game = {
             yaw: 0,
             pitch: 0,
             bobble: 0,
+            hands: null,
             sound: {},
             heading: function() { return [].quat_rotation([0, 1, 0], this.yaw).quat_rotate_vector([0, 0, 1]); }
         },
@@ -128,8 +129,8 @@ g.initialize(function ()
     'voxels/apt.json',
     'voxels/bb-boi.json',
     'voxels/cup.json',
-    'animations/mom-walk.json',
-    'image/mom-walk.pixelated.clamped.png',
+    'animations/hands.json',
+    'image/hands.pixelated.clamped.png',
     'sounds/angry-boi.m4a',
     'sounds/big-boy-mommy.m4a',
     'sounds/burp-0.m4a',
@@ -165,6 +166,9 @@ g.initialize(function ()
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
         gl.enable(gl.BLEND);
+
+        game.state.player.hands = new g.web.assets['animation/hands']();
+        game.state.player.hands.set('Walk');
 
         game.state.items.push(new game_item('voxel/cup', [32, 13, 20]));
 
@@ -295,7 +299,7 @@ function player_movement(dt)
 
         if (!game.state.player.sound.shuffle.is_playing())
         {
-            game.state.player.sound.shuffle.play();            
+            game.state.player.sound.shuffle.play();           
         }
 
         game.state.player.sound.shuffle.position(game.state.player.cam.position());
@@ -305,6 +309,9 @@ function player_movement(dt)
         vel = game.state.player.vel.mul(0.9);
         if (game.state.player.sound.shuffle.is_playing()) { game.state.player.sound.shuffle.pause(); }
     }
+
+    game.state.player.hands.pause(!moving);
+    game.state.player.hands.speed = speed / 10;
 
     // check collision
     game.state.player.vel = vel;
@@ -383,7 +390,7 @@ g.update(function (dt)
     if (dt > 1) { return; }
 
     player_movement(dt);
-    
+    game.state.player.hands.tick(dt);
     player_grabbed_item();
 
     for (var i = game.state.items.length; i--;)
@@ -431,17 +438,29 @@ g.web.draw(function (dt)
 
     gl.disable(gl.DEPTH_TEST);
 
-    var sprite = asset['animation/mom-walk'];
+    var sprite = asset['animation/hands'];
     asset['mesh/plane']
         .using_shader('animated_sprite')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
-        .set_uniform('u_sprite_sheet').texture(asset['image/mom-walk'])
-        .set_uniform('u_model').mat4([].translate([0, -0.5, 0]))
+        .set_uniform('u_sprite_sheet').texture(asset['image/hands'])
+        .set_uniform('u_model').mat4([].translate([-0.5, -0.5, 0]))
         .set_uniform('u_proj').mat4([].I(4))
         .set_uniform('u_view').mat4([].I(4))
-        .set_uniform('u_origin_size').vec4([0, 0, 0.1, 1])
-        // .set_uniform('u_origin_size').vec4(sprite.origin().concat(sprite.size()))
+        .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
+        .draw_tri_strip();
+
+    var mirror = [].I(4);
+    mirror[0][0] = -1;
+    asset['mesh/plane']
+        .using_shader('animated_sprite')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .set_uniform('u_sprite_sheet').texture(asset['image/hands'])
+        .set_uniform('u_model').mat4(mirror.mat_mul([].translate([0.5, -0.5, 0])))
+        .set_uniform('u_proj').mat4([].I(4))
+        .set_uniform('u_view').mat4([].I(4))
+        .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
 
     gl.enable(gl.DEPTH_TEST);

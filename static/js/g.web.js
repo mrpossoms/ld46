@@ -692,6 +692,8 @@ g.web = {
 				return function() {
 					this.frame_idx = 0;
 					this.frame_duration = frames[0].sec;
+					this.paused = false;
+					this.speed = 1;
 					this.tag = tag;
 					this.tags = tags;
 					this.queue = [];
@@ -701,8 +703,13 @@ g.web = {
 						return frames[this.tag[this.frame_idx]];
 					}
 
+					this.pause = function(pause) { this.paused = pause; }
+
 					this.tick = function(dt)
 					{
+						dt *= this.speed;
+
+						if(!this.paused)
 						while (dt > 0)
 						{
 							const prev_dur = this.frame_duration;
