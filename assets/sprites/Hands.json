@@ -1,0 +1,230 @@
+{ "frames": {
+   "{Hands} 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 1.aseprite": {
+    "frame": { "x": 173, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 2.aseprite": {
+    "frame": { "x": 346, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 3.aseprite": {
+    "frame": { "x": 519, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 4.aseprite": {
+    "frame": { "x": 692, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 5.aseprite": {
+    "frame": { "x": 865, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 6.aseprite": {
+    "frame": { "x": 1038, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 7.aseprite": {
+    "frame": { "x": 1211, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 8.aseprite": {
+    "frame": { "x": 1384, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 9.aseprite": {
+    "frame": { "x": 1557, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 10.aseprite": {
+    "frame": { "x": 1730, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 11.aseprite": {
+    "frame": { "x": 1903, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 12.aseprite": {
+    "frame": { "x": 2076, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 13.aseprite": {
+    "frame": { "x": 2249, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 14.aseprite": {
+    "frame": { "x": 2422, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 15.aseprite": {
+    "frame": { "x": 2595, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 16.aseprite": {
+    "frame": { "x": 2768, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 17.aseprite": {
+    "frame": { "x": 2941, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 18.aseprite": {
+    "frame": { "x": 3114, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 19.aseprite": {
+    "frame": { "x": 3287, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 20.aseprite": {
+    "frame": { "x": 3460, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 21.aseprite": {
+    "frame": { "x": 3633, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 22.aseprite": {
+    "frame": { "x": 3806, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 23.aseprite": {
+    "frame": { "x": 3979, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 24.aseprite": {
+    "frame": { "x": 4152, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   },
+   "{Hands} 25.aseprite": {
+    "frame": { "x": 4325, "y": 0, "w": 173, "h": 92 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 173, "h": 92 },
+    "sourceSize": { "w": 173, "h": 92 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.17-x64",
+  "image": "Drink_Wide.png",
+  "format": "RGBA8888",
+  "size": { "w": 4498, "h": 92 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Grab_Drink", "from": 0, "to": 7, "direction": "forward" },
+   { "name": "Walk", "from": 8, "to": 17, "direction": "forward" },
+   { "name": "Pizza_Grab", "from": 18, "to": 25, "direction": "forward" }
+  ],
+  "layers": [
+   { "name": "Layer", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
