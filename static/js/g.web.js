@@ -513,6 +513,7 @@ g.web = {
 							width: voxel_data.SIZE.x,
 							height: voxel_data.SIZE.z,
 							depth: voxel_data.SIZE.y,
+							scale: voxel_data.scale,
 							cells: cells
 						};
 					}
@@ -639,6 +640,7 @@ g.web = {
 
 					var gl_mesh = g.web.gfx.mesh.create(mesh);
 					gl_mesh.cells = cells;
+					gl_mesh.scale = s;
 
 					return gl_mesh;
 				}

@@ -51,26 +51,45 @@ function game_item(asset_name, pos)
 {
     this.pos = pos;
     this.vel = [0, 0, 0];
+    this.ori = [0, 0, 0, 1];
+    this.offset = [0, 0, 0];
     this.name = asset_name;
     this.asset = g.web.assets[asset_name];
 
     this.tick = function(dt)
     {
         const space = g.web.assets['voxel/apt'].cells;
-        const x_t0 = Math.floor(this.pos[0]), y_t0 = Math.floor(this.pos[1]), z_t0 = Math.floor(this.pos[2]);
-        var tmp_pos = this.pos.add(this.vel.mul(dt));
-        const x_t1 = Math.floor(tmp_pos[0]), y_t1 = Math.floor(tmp_pos[1]), z_t1 = Math.floor(tmp_pos[2]);
-        const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
-        //return;
+        var bounced = false;
+
+        const cells = this.asset.cells;
+        const s = this.asset.scale;
+
+        this.offset = [cells.length, cells[0].length, cells[0][0].length].mul(0.5 * s);
+
+        for (var xi = 0; xi < cells.length; xi++)
+        for (var yi = 0; yi < cells[xi].length; yi++)
+        for (var zi = 0; zi < cells[xi][yi].length; zi++)
+        {
+            const x_t0 = Math.floor(this.pos[0] + xi * s), y_t0 = Math.floor(this.pos[1] + yi * s), z_t0 = Math.floor(this.pos[2] + zi * s);
+            var tmp_pos = this.pos.add(this.vel.mul(dt));
+            const x_t1 = Math.floor(tmp_pos[0] + xi * s), y_t1 = Math.floor(tmp_pos[1] + yi * s), z_t1 = Math.floor(tmp_pos[2] + zi * s);
+            const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
+            //return;
+
+            if (space[x_t1][Math.max(0, y_t1)][z_t1])
+            {
+                const l = this.vel.mul(-1);
+                this.vel = (n.mul(2 * n.dot(l)).sub(l));
+                this.vel = this.vel.sub(this.vel.mul(0.5));
+                bounced = true;
+            }
+        }
+
+
         this.vel = this.vel.add([0, -9.8 * 8 * dt, 0]);
 
-        if (space[x_t1][Math.max(0, y_t1)][z_t1])
-        {
-            const l = this.vel.mul(-1);
-            this.vel = (n.mul(2 * n.dot(l)).sub(l));
-            this.vel = this.vel.sub(this.vel.mul(0.5));
-        }
-        else 
+
+        if (!bounced)
         {
             this.pos = tmp_pos;
         }
@@ -78,7 +97,7 @@ function game_item(asset_name, pos)
 
     this.draw = function()
     {
-        const model = [].translate(this.pos);//.transpose();
+        const model = this.ori.quat_inverse().quat_to_matrix().mat_mul([].translate(this.pos));//.transpose();
         this.asset.using_shader('basic_colored')
                   .with_attribute({name:'a_position', buffer: 'positions', components: 3})
                   .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
@@ -143,7 +162,8 @@ g.web.pointer.on_press(function ()
         {
             var item = game.state.items[i];
             const pos = player.cam.position();
-            if (player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2))
+            const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 2);
+            if (t !== false && t.len() < 14)
             {
                 player.grabbed_item = item;
                 item.vel = [0,0,0];
@@ -158,8 +178,8 @@ g.web.pointer.on_move(function (event)
     game.state.player.yaw += event.movementX * k.mouse.sensitivity;
     const dp = -event.movementY * k.mouse.sensitivity;
 
-    if (game.state.player.pitch + dp > -Math.PI / 4 &&
-        game.state.player.pitch + dp <  Math.PI / 4)
+    if (game.state.player.pitch + dp > -Math.PI / 2 &&
+        game.state.player.pitch + dp <  Math.PI / 2)
     {
         game.state.player.pitch += dp;
     }
@@ -170,11 +190,6 @@ g.web.pointer.on_move(function (event)
 });
 
 
-g.web.on_message(function (msg)
-{
-
-});
-
 function bb_boi_tick(boi, dt)
 {
     const mul = boi.get_daipies();
@@ -184,7 +199,7 @@ function bb_boi_tick(boi, dt)
     boi.bed_pan += boi.rates.bed_pan_s * pizza_delta * dt;
 }
 
-g.update(function (dt)
+function player_movement(dt)
 {
     const forward = game.state.player.heading();
     const left = game.state.player.cam.left();
@@ -203,7 +218,7 @@ g.update(function (dt)
         game.state.player.fov = Math.PI / 2 * 0.8;
     }
 
-	if (g.web.key.is_pressed('w')) { moving = true; vel = vel.add(forward.mul(-dt * speed)); }
+    if (g.web.key.is_pressed('w')) { moving = true; vel = vel.add(forward.mul(-dt * speed)); }
     if (g.web.key.is_pressed('s')) { moving = true; vel = vel.add(forward.mul(dt * speed)); }
     if (g.web.key.is_pressed('a')) { moving = true; vel = vel.add(left.mul(dt * speed)); }
     if (g.web.key.is_pressed('d')) { moving = true; vel = vel.add(left.mul(-dt * speed)); }
@@ -217,12 +232,10 @@ g.update(function (dt)
         vel = game.state.player.vel.mul(0.9);
     }
 
-    plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
-
+    // check collision
     game.state.player.vel = vel;
     var tmp_pos = pos.add(vel);
     const space = g.web.assets['voxel/apt'].cells;
-
     var x = Math.floor(tmp_pos[0]), y = Math.floor(tmp_pos[1] + 1), z = Math.floor(tmp_pos[2]);
     var intersecting = false;
 
@@ -238,6 +251,7 @@ g.update(function (dt)
         }
     }
 
+    // do climing check
     for (var yi = 14; --yi;)
     {
         if (space[x][y + yi][z])
@@ -250,6 +264,7 @@ g.update(function (dt)
         }
     }
 
+    // do falling check
     if (y - 1 >= 0 && !space[x][y - 1][z]) { tmp_pos[1] -= 1; }
 
     if (!intersecting)
@@ -264,11 +279,31 @@ g.update(function (dt)
 
     game.state.player.cam.perspective(game.state.player.interp_fov);
     game.state.player.cam.position(game.state.player.interp_pos.add(sway.mul(0.5).add([0, 14, 0])));
-    
-    if (game.state.player.grabbed_item)
+}
+
+function player_grabbed_item()
+{
+    const player = game.state.player;
+    var grabbed_item = player.grabbed_item;
+    const cam = game.state.player.cam;
+    if (grabbed_item)
     {
-        game.state.player.grabbed_item.pos = game.state.player.cam.position().add(game.state.player.cam.forward().mul(-2));
+        const off_left = cam.left().mul(grabbed_item.offset[0]);
+        const off_up = cam.up().mul(grabbed_item.offset[1]);
+        const off_forward = cam.forward().mul(grabbed_item.offset[2]);
+        const off = off_left.add(off_up).add(off_forward);
+        grabbed_item.pos = cam.position().sub(off).add(cam.forward().mul(-2));
+        grabbed_item.ori = cam.orientation();
     }
+}
+
+g.update(function (dt)
+{
+    if (dt > 1) { return; }
+
+    player_movement(dt);
+    
+    player_grabbed_item();
 
     for (var i = game.state.items.length; i--;)
     {
@@ -289,19 +324,12 @@ g.web.draw(function (dt)
 
     const mesh = g.web.assets['voxel/apt'];
 
-    // cam.perspective();
-
-    // plane_q = plane_q.quat_mul([].quat_rotation([0, 0, 1], dt));
-
-    // cam._view = cam.q.quat_to_matrix();
-
     mesh.using_shader('basic_colored')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
         .with_attribute({name:'a_color', buffer: 'colors', components: 3})
         .with_camera(game.state.player.cam)
         .set_uniform('u_model').mat4([].I(4))
-        // .set_uniform('u_model').mat4(cam.q.quat_to_matrix())
         .set_uniform('u_texture').texture(g.web.assets['tex/stars'])
         .draw_tris();
 
