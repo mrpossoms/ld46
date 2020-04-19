@@ -480,6 +480,7 @@ g.web = {
 				from_voxels: function(voxel_data)
 				{
 					var palette = null;
+					var locations = [];
 
 					// convert to uniform data storage
 					if (voxel_data.SIZE)
@@ -498,7 +499,18 @@ g.web = {
 						for (var vi = voxel_data.XYZI.length; vi--;)
 						{
 							const set = voxel_data.XYZI[vi];
-							cells[set.x][set.z][set.y] = set.c;
+							const col = voxel_data.RGBA[set.c];
+							if (col.r >= 254 || col.g >= 254 || col.b >= 254)
+							{
+								locations.push({
+									position: [set.x, set.y, set.z],
+									color: [col.r, col.g, col.b]
+								});
+							}
+							else
+							{
+								cells[set.x][set.z][set.y] = set.c;								
+							}
 						}
 
 						palette = voxel_data.RGBA;
@@ -639,6 +651,7 @@ g.web = {
 
 					var gl_mesh = g.web.gfx.mesh.create(mesh);
 					gl_mesh.cells = cells;
+					gl_mesh.locations = locations;
 					gl_mesh.scale = s;
 
 					return gl_mesh;
