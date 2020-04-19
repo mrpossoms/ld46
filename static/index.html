@@ -11,7 +11,8 @@ const k = {
         sensitivity: 0.005
     },
     player: {
-        speed: 10
+        speed: 10,
+        sprint: 3,
     }
 };
 
@@ -19,7 +20,10 @@ var game = {
     state: {
         player: {
             cam: new g.web.gfx.camera(),
-            pos: [-32, -14, -32],
+            pos: [32, 0, 32],
+            fov: Math.PI / 2,
+            interp_pos: [32, 0, 32],
+            interp_fov: Math.PI / 2,
             vel: [0, 0, 0],
             yaw: 0,
             pitch: 0,
@@ -41,7 +45,6 @@ g.initialize(function ()
     const asset_list = [
     'shaders/basic_colored.vert',
     'shaders/basic_colored.frag',
-    'imgs/stars.jpg',
     'meshes/plane.json',
     'voxels/apt.json'
     ];
@@ -58,9 +61,7 @@ g.initialize(function ()
 
         // g.web.assets['mesh/plane'] = g.web.gfx.mesh.create(g.web.assets["meshes/plane.json"]);
         g.web.assets['mesh/teapot'] = g.web.gfx.mesh.create(g.web.assets['meshes/exported-cube.json']);
-        g.web.assets['tex/stars'] = g.web.gfx.texture.repeating()
-                                                     .pixelated()
-                                                     .create(g.web.assets["imgs/stars.jpg"])
+
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
     });
@@ -104,10 +105,21 @@ g.update(function (dt)
     var vel = [0, 0, 0];
 
     var moving = false;
-	if (g.web.key.is_pressed('w')) { moving = true; vel = vel.add(forward.mul(dt * k.player.speed)); }
-    if (g.web.key.is_pressed('s')) { moving = true; vel = vel.add(forward.mul(-dt * k.player.speed)); }
-    if (g.web.key.is_pressed('a')) { moving = true; vel = vel.add(left.mul(-dt * k.player.speed)); }
-    if (g.web.key.is_pressed('d')) { moving = true; vel = vel.add(left.mul(dt * k.player.speed)); }
+    var speed = k.player.speed;
+    if (g.web.key.is_pressed('shift'))
+    {
+        speed *= k.player.sprint;
+        game.state.player.fov = Math.PI / 2 * 1.2;
+    }
+    else
+    {
+        game.state.player.fov = Math.PI / 2 * 0.8;
+    }
+
+	if (g.web.key.is_pressed('w')) { moving = true; vel = vel.add(forward.mul(-dt * speed)); }
+    if (g.web.key.is_pressed('s')) { moving = true; vel = vel.add(forward.mul(dt * speed)); }
+    if (g.web.key.is_pressed('a')) { moving = true; vel = vel.add(left.mul(dt * speed)); }
+    if (g.web.key.is_pressed('d')) { moving = true; vel = vel.add(left.mul(-dt * speed)); }
 
     if (moving)
     {
@@ -121,10 +133,50 @@ g.update(function (dt)
     plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
 
     game.state.player.vel = vel;
-    game.state.player.pos = pos.add(vel);
+    var tmp_pos = pos.add(vel);
+    const space = g.web.assets['voxel/apt'].cells;
+
+    var x = Math.floor(tmp_pos[0]), y = Math.floor(tmp_pos[1] + 1), z = Math.floor(tmp_pos[2]);
+    var intersecting = false;
+
+    y = Math.floor(tmp_pos[1]);
+
+    for (var yi = 6; yi < 14; yi++)
+    for (var xi = -1; xi <= 1; xi++)
+    for (var zi = -1; zi <= 1; zi++)
+    {
+        if (space[x + xi][y + yi][z + zi])
+        {
+            intersecting = true;
+        }
+    }
+
+    for (var yi = 14; --yi;)
+    {
+        if (space[x][y + yi][z])
+        {
+            if (yi <= 5)
+            {
+                tmp_pos[1] += yi;
+                break;
+            }
+        }
+    }
+
+    if (y - 1 >= 0 && !space[x][y - 1][z]) { tmp_pos[1] -= 1; }
+
+    if (!intersecting)
+    {
+        game.state.player.pos = tmp_pos;
+    }
+
+    game.state.player.interp_pos = game.state.player.interp_pos.lerp(tmp_pos, 0.25);
+    game.state.player.interp_fov = game.state.player.interp_fov * 0.95 + game.state.player.fov * 0.05;
+
     var sway = [0, Math.sin(game.state.player.bobble), 0].add(left.mul(Math.cos(game.state.player.bobble * 0.5)));
 
-    game.state.player.cam.position(pos.add(sway.mul(0.5)));
+    game.state.player.cam.perspective(game.state.player.interp_fov);
+    game.state.player.cam.position(game.state.player.interp_pos.add(sway.mul(0.5).add([0, 14, 0])));
     // cam.view(cam.position, ([0, 0, 1]), ([0, 1, 0]));
 });
 

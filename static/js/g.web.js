@@ -63,7 +63,7 @@ g.web = {
 			{
 				if (position && forward && up)
 				{
-					this._pos = position;
+					this._pos = position.mul(-1);
 					this._forward = forward.norm();
 					this._up = up.norm();
 					this._view = [].view(this._pos, this._forward, this._up);
@@ -480,13 +480,7 @@ g.web = {
 				{
 					var palette = null;
 
-					var mesh = {
-						positions: [],
-						normals: [],
-						colors: [],
-						texture_coords: [],
-						indices: [],
-					};
+
 
 					// convert to uniform data storage
 					if (voxel_data.SIZE)
@@ -528,6 +522,14 @@ g.web = {
 					const d = voxel_data.depth;
 					const s = voxel_data.scale || 1;
 					var cells = voxel_data.cells;
+
+					var mesh = {
+						positions: [],
+						normals: [],
+						colors: [],
+						texture_coords: [],
+						indices: []
+					};
 
 					/*
 							x -->
@@ -635,7 +637,10 @@ g.web = {
 						}
 					}
 
-					return g.web.gfx.mesh.create(mesh);
+					var gl_mesh = g.web.gfx.mesh.create(mesh);
+					gl_mesh.cells = cells;
+					
+					return gl_mesh;
 				}
 			}
 		},
