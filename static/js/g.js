@@ -432,7 +432,7 @@ Array.prototype.translate = function(t)
 		[    1,    0,    0,    0    ],
 		[    0,    1,    0,    0    ],
 		[    0,    0,    1,    0    ],
-		[ -t[0], -t[1], -t[2], 1.   ]
+		[  t[0], t[1], t[2],   1.   ]
 	];
 };
 
@@ -494,7 +494,7 @@ Array.prototype.view = function(position, forward, up)
 		[     1,     0,     0,    0 ],
 		[     0,     1,     0,    0 ],
 		[     0,     0,     1,    0 ],
-		[  p[0],  p[1],  p[2],    1 ]
+		[ -p[0], -p[1], -p[2],    1 ]
 	];
 
 	//return ori;
