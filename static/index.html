@@ -9,6 +9,9 @@
 const k = {
     mouse: {
         sensitivity: 0.005
+    },
+    player: {
+        speed: 10
     }
 };
 
@@ -37,10 +40,11 @@ g.initialize(function ()
     'shaders/basic_textured.frag',
     'imgs/stars.jpg',
     'meshes/plane.json',
-    'meshes/exported-cube.json'
+    'voxels/apt.json'
     ];
 
     game.state.player.cam.perspective();
+    game.state.player.cam.position([0, -14, 0]);
 
     g.web.assets.load(asset_list,
     function() {
@@ -55,11 +59,16 @@ g.initialize(function ()
                                                      .pixelated()
                                                      .create(g.web.assets["imgs/stars.jpg"])
         g.is_running = true;
+        gl.getExtension('OES_element_index_uint');
     });
 
 	return true;
 });
 
+g.web.pointer.on_press(function ()
+{
+    g.web._canvas.requestPointerLock();
+});
 
 g.web.pointer.on_move(function (event)
 {
@@ -90,10 +99,10 @@ g.update(function (dt)
     const left = game.state.player.cam.left();
     var pos = game.state.player.cam.position();
 
-	if (g.web.key.is_pressed('w')) { pos = pos.add(forward.mul(dt)); }
-    if (g.web.key.is_pressed('s')) { pos = pos.add(forward.mul(-dt)); }
-    if (g.web.key.is_pressed('a')) { pos = pos.add(left.mul(-dt)); }
-    if (g.web.key.is_pressed('d')) { pos = pos.add(left.mul(dt)); }
+	if (g.web.key.is_pressed('w')) { pos = pos.add(forward.mul(dt * k.player.speed)); }
+    if (g.web.key.is_pressed('s')) { pos = pos.add(forward.mul(-dt * k.player.speed)); }
+    if (g.web.key.is_pressed('a')) { pos = pos.add(left.mul(-dt * k.player.speed)); }
+    if (g.web.key.is_pressed('d')) { pos = pos.add(left.mul(dt * k.player.speed)); }
 
     plane_pos = [ Math.cos(t), Math.sin(t), 0 ].mul(0);
 
@@ -110,7 +119,7 @@ g.web.draw(function (dt)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const mesh = g.web.assets['mesh/teapot'];
+    const mesh = g.web.assets['voxel/apt'];
 
     // cam.perspective();
 
