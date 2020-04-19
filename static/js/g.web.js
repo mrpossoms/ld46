@@ -43,6 +43,7 @@ g.web = {
 			this._pos = [0,0,0];
 			this._forward = [0,0,1];
 			this._up = [0,1,0];
+			this._left = [1,0,0];
 
 			this.look_at = function(position, subject, up)
 			{
@@ -52,6 +53,7 @@ g.web = {
 					this._forward = subject.sub(position).norm();
 					this._up = up.norm();
 					this._view = [].view(this._pos, this._forward, this._up);
+					this._left = this._q.quat_rotate_vector([1, 0, 0]);
 				}
 
 				return this._view;
@@ -65,6 +67,7 @@ g.web = {
 					this._forward = forward.norm();
 					this._up = up.norm();
 					this._view = [].view(this._pos, this._forward, this._up);
+					this._left = this._q.quat_rotate_vector([1, 0, 0]);
 				}
 
 				return this._view;
@@ -73,6 +76,11 @@ g.web = {
 			this.orientation = function(q)
 			{
 				if (q) { this._q = q; }
+
+				this._up = this._q.quat_rotate_vector([0, 1, 0]);
+				this._forward = this._q.quat_rotate_vector([0, 0, 1]);
+				this._left = this._q.quat_rotate_vector([1, 0, 0]);
+
 				return this._q;
 			};
 
@@ -90,6 +98,7 @@ g.web = {
 
 				this._up = this._q.quat_rotate_vector([0, 1, 0]);
 				this._forward = this._q.quat_rotate_vector([0, 0, 1]);
+				this._left = this._q.quat_rotate_vector([1, 0, 0]);
 
 				this.view(this._pos, this._forward, this._up);
 			};
@@ -114,6 +123,11 @@ g.web = {
 				}
 
 				return this._up;
+			};
+
+			this.left = function()
+			{
+				return this._left;
 			};
 
 			this.forward = function(f)
