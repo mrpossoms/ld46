@@ -20,9 +20,9 @@ var game = {
     state: {
         player: {
             cam: new g.web.gfx.camera(),
-            pos: [32, 0, 32],
+            pos: [31.65732783069993, 32, 52.7072951645269],
             fov: Math.PI / 2,
-            interp_pos: [32, 0, 32],
+            interp_pos: [31.65732783069993, 32, 52.7072951645269],
             interp_fov: Math.PI / 2,
             vel: [0, 0, 0],
             grabbed_item: null,
@@ -138,6 +138,8 @@ g.initialize(function ()
     const asset_list = [
     'shaders/basic_colored.vert',
     'shaders/basic_colored.frag',
+    'shaders/basic_textured.vert',
+    'shaders/basic_textured.frag',
     'shaders/animated_sprite.vert',
     'shaders/animated_sprite.frag',
     'meshes/plane.json',
@@ -149,6 +151,10 @@ g.initialize(function ()
     'voxels/item-dew.json',
     'animations/hands.json',
     'image/hands.pixelated.clamped.png',
+    'image/ui.pixelated.clamped.png',
+    'image/pizza-ui.pixelated.clamped.png',
+    'image/daiper-ui.pixelated.clamped.png',
+    'image/dew-ui.pixelated.clamped.png',
     'sounds/angry-boi.m4a',
     'sounds/big-boy-mommy.m4a',
     'sounds/burp-0.m4a',
@@ -174,6 +180,11 @@ g.initialize(function ()
         g.web.gfx.shader.create('basic_colored',
             g.web.assets['shaders/basic_colored.vert'],
             g.web.assets['shaders/basic_colored.frag']
+        );
+
+        g.web.gfx.shader.create('basic_textured',
+            g.web.assets['shaders/basic_textured.vert'],
+            g.web.assets['shaders/basic_textured.frag']
         );
 
         g.web.gfx.shader.create('animated_sprite',
@@ -208,10 +219,12 @@ g.initialize(function ()
         game.state.bb_boi.sound.gaming.gain(4);
         game.state.bb_boi.sound.gaming.play();
 
-        game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 7, 40]);
+        game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 0, 40]);
         game.state.bb_boi.sound.basement.loop(true);
-        game.state.bb_boi.sound.basement.gain(0.5);
+        game.state.bb_boi.sound.basement.gain(0.25);
+        game.state.bb_boi.sound.basement.panner.rolloffFactor = 1;
         game.state.bb_boi.sound.basement.play();
+
     });
 
 	return true;
@@ -423,6 +436,18 @@ g.update(function (dt)
 
 var t = 0;
 
+function draw_gauge(tex, model, value)
+{
+    g.web.assets['mesh/plane']
+        .using_shader('basic_textured')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .set_uniform('u_texture').texture(g.web.assets[tex])
+        .set_uniform('u_percentage').float(value)
+        .set_uniform('u_model').mat4(model)
+        .draw_tri_strip();
+}
+
 g.web.draw(function (dt)
 {
     t += dt;
@@ -483,6 +508,24 @@ g.web.draw(function (dt)
         .set_uniform('u_view').mat4([].I(4))
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
+
+    scale[0][0] = 2; scale[1][1] = 1 * g.web.gfx.aspect();
+    asset['mesh/plane']
+        .using_shader('basic_textured')
+        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
+        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
+        .set_uniform('u_texture').texture(asset['image/ui'])
+        .set_uniform('u_percentage').float(1.0)
+        .set_uniform('u_model').mat4(scale.mat_mul([].translate([0, -0.51, 0])))
+        .set_uniform('u_proj').mat4([].I(4))
+        .set_uniform('u_view').mat4([].I(4))
+        .draw_tri_strip();
+
+    scale = scale.mat_mul([].translate([0, -0.51, 0]));
+
+    draw_gauge('image/pizza-ui', scale, game.state.bb_boi.pizza);
+    draw_gauge('image/dew-ui', scale, game.state.bb_boi.mtn_dew);
+    draw_gauge('image/daiper-ui', scale, game.state.bb_boi.bed_pan);
 
     gl.enable(gl.DEPTH_TEST);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
