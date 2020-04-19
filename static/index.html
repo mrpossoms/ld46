@@ -439,25 +439,26 @@ g.web.draw(function (dt)
     gl.disable(gl.DEPTH_TEST);
 
     var sprite = asset['animation/hands'];
+    var scale = [].I(4);
+    scale[0][0] *= 1 / g.web.gfx.aspect();
     asset['mesh/plane']
         .using_shader('animated_sprite')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
         .set_uniform('u_sprite_sheet').texture(asset['image/hands'])
-        .set_uniform('u_model').mat4([].translate([-0.5, -0.5, 0]))
+        .set_uniform('u_model').mat4(scale.mat_mul([].translate([-0.5, -0.5, 0])))
         .set_uniform('u_proj').mat4([].I(4))
         .set_uniform('u_view').mat4([].I(4))
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
 
-    var mirror = [].I(4);
-    mirror[0][0] = -1;
+    scale[0][0] *= -1;
     asset['mesh/plane']
         .using_shader('animated_sprite')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
         .set_uniform('u_sprite_sheet').texture(asset['image/hands'])
-        .set_uniform('u_model').mat4(mirror.mat_mul([].translate([0.5, -0.5, 0])))
+        .set_uniform('u_model').mat4(scale.mat_mul([].translate([0.5, -0.5, 0])))
         .set_uniform('u_proj').mat4([].I(4))
         .set_uniform('u_view').mat4([].I(4))
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
