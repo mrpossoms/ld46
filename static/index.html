@@ -69,24 +69,39 @@ function game_item(asset_name, pos)
 
         this.offset = [cells.length, cells[0].length, cells[0][0].length].mul(0.5 * s);
 
-        for (var xi = 0; xi < cells.length; xi++)
-        for (var yi = 0; yi < cells[xi].length; yi++)
-        for (var zi = 0; zi < cells[xi][yi].length; zi++)
+        try
         {
-            const x_t0 = Math.floor(this.pos[0] + xi * s), y_t0 = Math.floor(this.pos[1] + yi * s), z_t0 = Math.floor(this.pos[2] + zi * s);
-            var tmp_pos = this.pos.add(this.vel.mul(dt));
-            const x_t1 = Math.floor(tmp_pos[0] + xi * s), y_t1 = Math.floor(tmp_pos[1] + yi * s), z_t1 = Math.floor(tmp_pos[2] + zi * s);
-            const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
-            //return;
-
-            if (space[x_t1][Math.max(0, y_t1)][z_t1])
+            for (var xi = 0; xi < cells.length; xi++)
+            for (var yi = 0; yi < cells[xi].length; yi++)
+            for (var zi = 0; zi < cells[xi][yi].length; zi++)
             {
-                const l = this.vel.mul(-1);
-                this.vel = (n.mul(2 * n.dot(l)).sub(l));
-                this.vel = this.vel.sub(this.vel.mul(0.5));
-                bounced = true;
-            }
+                const x_t0 = Math.floor(this.pos[0] + xi * s), y_t0 = Math.floor(this.pos[1] + yi * s), z_t0 = Math.floor(this.pos[2] + zi * s);
+                var tmp_pos = this.pos.add(this.vel.mul(dt));
+                const x_t1 = Math.floor(tmp_pos[0] + xi * s), y_t1 = Math.floor(tmp_pos[1] + yi * s), z_t1 = Math.floor(tmp_pos[2] + zi * s);
+                const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
+
+                if (space[x_t1][Math.max(0, y_t1)][z_t1])
+                {
+                    if (isNaN(n.dot(n))) { return; }
+
+                    const l = this.vel.mul(-1);
+                    var vel = (n.mul(2 * n.dot(l)).sub(l));
+                    vel = vel.sub(vel.mul(0.5));
+
+                    if (isNaN(vel.dot(vel)))
+                    {
+                        console.log('wtf');
+                    }
+                    this.vel = vel;
+                    bounced = true;
+                }
+            }            
         }
+        catch
+        {
+            console.log('wat')
+        }
+
 
 
         this.vel = this.vel.add([0, -9.8 * 8 * dt, 0]);
@@ -173,7 +188,9 @@ g.initialize(function ()
         game.state.player.hands = new g.web.assets['animation/hands']();
         game.state.player.hands.set('Walk');
 
-        game.state.items.push(new game_item('voxel/item-diaper', [32, 13, 20]));
+        game.state.items.push(new game_item('voxel/item-pizza', [32, 13, 20]));
+        game.state.items.push(new game_item('voxel/item-dew', [38, 13, 20]));
+        game.state.items.push(new game_item('voxel/item-diaper', [28, 13, 20]));
 
         // game.test_sound = new g.web.assets['sound/angry-boi']([32, 13, 20]);
         // game.test_sound.play();
@@ -383,7 +400,7 @@ function player_grabbed_item()
         const off_up = cam.up().mul(grabbed_item.offset[1]);
         const off_forward = cam.forward().mul(grabbed_item.offset[2]);
         const off = off_left.add(off_up).add(off_forward);
-        grabbed_item.pos = cam.position().sub(off).add(cam.forward().mul(-2));
+        grabbed_item.pos = cam.position().sub(off).add(cam.forward().mul(-6));
         grabbed_item.ori = cam.orientation();
     }
 }
