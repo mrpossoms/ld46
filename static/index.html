@@ -184,6 +184,7 @@ g.initialize(function ()
     'shaders/animated_sprite.frag',
     'meshes/plane.json',
     'voxels/apt.json',
+    'voxels/apt-dead.json',
     'voxels/bb-boi.json',
     'voxels/cup.json',
     'voxels/item-diaper.json',
@@ -668,9 +669,9 @@ g.web.draw(function (dt)
     
     var apt = asset['voxel/apt'];
 
-    if (game.state.bb_boi.hp < 1)
+    if (game.state.bb_boi.hp < 0.01)
     {
-        apt = asset['voxel/apt']; // update with death scene
+        apt = asset['voxel/apt-dead']; // update with death scene
     }
     
     apt
