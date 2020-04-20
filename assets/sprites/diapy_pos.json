@@ -1,0 +1,26 @@
+{ "frames": {
+   "diapy_pos.png": {
+    "frame": { "x": 0, "y": 0, "w": 248, "h": 144 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 248, "h": 144 },
+    "sourceSize": { "w": 248, "h": 144 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.17-x64",
+  "image": "diapy_pos-sheet.png",
+  "format": "RGBA8888",
+  "size": { "w": 248, "h": 144 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
