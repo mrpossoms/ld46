@@ -62,4 +62,4 @@ app.get('/', function(res, req)
 // express setup
 app.use(express.static(path.join(__dirname, 'static')));
 //app.use(express.static('static'));
-http.listen(3001, function() { console.log('Running!'); });
+http.listen(3003, function() { console.log('Running!'); });

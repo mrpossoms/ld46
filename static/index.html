@@ -392,14 +392,14 @@ function bb_boi_tick(boi, dt)
         switch(item.name)
         {
             case "voxel/item-dew":
-                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 10)
+                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 15)
                 {
                     game.state.items.splice(i, 1);
                     boi.mtn_dew = Math.max(0, boi.mtn_dew + 0.25);
                 }
                 break;
             case "voxel/item-pizza":
-                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 10)
+                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 15)
                 {
                     game.state.items.splice(i, 1);
                     boi.pizza = Math.max(0, boi.pizza + 0.25);
@@ -638,15 +638,6 @@ g.web.draw(function (dt)
         .with_attribute({name:'a_color', buffer: 'colors', components: 3})
         .with_camera(game.state.player.cam)
         .set_uniform('u_model').mat4([].I(4))
-        .draw_tris();
-
-    asset['voxel/bb-boi']
-        .using_shader('basic_colored')
-        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
-        .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
-        .with_attribute({name:'a_color', buffer: 'colors', components: 3})
-        .with_camera(game.state.player.cam)
-        .set_uniform('u_model').mat4([].translate([12, 1, 26]))
         .draw_tris();
 
     for (var i = game.state.items.length; i--;)
