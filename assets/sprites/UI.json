@@ -1,19 +1,19 @@
 { "frames": {
-   "Game.png": {
-    "frame": { "x": 0, "y": 0, "w": 248, "h": 144 },
+   "UI.png": {
+    "frame": { "x": 0, "y": 0, "w": 248, "h": 41 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 248, "h": 144 },
-    "sourceSize": { "w": 248, "h": 144 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 248, "h": 41 },
+    "sourceSize": { "w": 248, "h": 41 },
     "duration": 100
    }
  },
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.17-x64",
-  "image": "Game-sheet.png",
+  "image": "UI-sheet.png",
   "format": "RGBA8888",
-  "size": { "w": 248, "h": 144 },
+  "size": { "w": 248, "h": 41 },
   "scale": "1",
   "frameTags": [
    { "name": "ui_tag", "from": 0, "to": 0, "direction": "forward" }
