@@ -40,11 +40,28 @@ var game = {
             mtn_dew: 1,
             sound: {},
             rates: {
-                pizza_s: 0.02,
+                pizza_s: 0.01,
                 bed_pan_s: 1,//0.33,
-                mtn_dew_s: 0.04
+                mtn_dew_s: 0.02
             },
-            get_daipies: function() { return 1; }
+            get_daipies: function()
+            {
+                var count = 0;
+                for (var i = game.state.items.length; i--;)
+                {
+                    var item = game.state.items[i];
+                    switch(item.name)
+                    {
+                        case "voxel/item-diaper":
+                            if (item.pos.sub(game.state.diaper_spawners[0].position).len() < 20)
+                            {
+                                count += 1;
+                            }
+                            break;
+                    }
+                } 
+                return count;
+            }
         },
         pizza_spawners: [],
         pizza_consumers: [],
@@ -189,6 +206,7 @@ g.initialize(function ()
     'sounds/shuffle.m4a',
     'sounds/slurp.m4a',
     'sounds/toilet.m4a',
+    'sounds/poop.m4a',
     'sounds/basement.mp3'
     ];
 
@@ -248,6 +266,9 @@ g.initialize(function ()
 
         game.state.bb_boi.sound.toilet = new g.web.assets['sound/toilet']([25, 7, 40]);
         game.state.bb_boi.sound.toilet.gain(6);
+
+        game.state.bb_boi.sound.poop = new g.web.assets['sound/poop']([25, 7, 40]);
+        game.state.bb_boi.sound.poop.gain(8);
 
         game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 0, 40]);
         game.state.bb_boi.sound.basement.loop(true);
@@ -358,7 +379,7 @@ g.web.pointer.on_move(function (event)
 
 function bb_boi_tick(boi, dt)
 {
-    const mul = boi.get_daipies();
+    const mul = boi.get_daipies() + 1;
     const pizza_delta = boi.rates.pizza_s * mul * dt;
 
     const last_dew = boi.mtn_dew;
@@ -415,9 +436,6 @@ function bb_boi_tick(boi, dt)
     if (last_bed_pan < 0.75 && boi.bed_pan >= 0.75)
     {
         game.state.bb_boi.sound.toilet.play();
-        // var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0].position);
-        // poo.vel = [].random_unit().mul(20).add([0, 0, 40]);
-        // game.state.items.push(poo);
     }
 
     if (boi.bed_pan >= 1)
@@ -425,6 +443,7 @@ function bb_boi_tick(boi, dt)
         var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0].position);
         poo.vel = [].random_unit().mul(20).add([0, 0, 40]);
         game.state.items.push(poo);
+        game.state.bb_boi.sound.poop.play();
         boi.bed_pan = 0;
     }
 }
@@ -663,19 +682,20 @@ g.web.draw(function (dt)
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
 
-    scale[0][0] = 2; scale[1][1] = 1 * g.web.gfx.aspect();
+    scale[0][0] = 2; scale[1][1] = 0.25 * g.web.gfx.aspect();
+    scale = scale.mat_mul([].translate([0, -0.876, 0]));
     asset['mesh/plane']
         .using_shader('basic_textured')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
         .set_uniform('u_texture').texture(asset['image/ui'])
         .set_uniform('u_percentage').float(1.0)
-        .set_uniform('u_model').mat4(scale.mat_mul([].translate([0, -0.51, 0])))
+        .set_uniform('u_model').mat4(scale)
         .set_uniform('u_proj').mat4([].I(4))
         .set_uniform('u_view').mat4([].I(4))
         .draw_tri_strip();
 
-    scale = scale.mat_mul([].translate([0, -0.51, 0]));
+    
 
     draw_gauge('image/pizza-ui', scale, game.state.bb_boi.pizza);
     draw_gauge('image/dew-ui', scale, game.state.bb_boi.mtn_dew);
