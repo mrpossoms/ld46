@@ -42,7 +42,8 @@ var game = {
             rates: {
                 pizza_s: 0.01,
                 bed_pan_s: 1,//0.33,
-                mtn_dew_s: 0.02
+                mtn_dew_s: 0.02,
+                hp_drain_s: 0.01,
             },
             get_daipies: function()
             {
@@ -419,9 +420,16 @@ function bb_boi_tick(boi, dt)
     boi.mtn_dew -= boi.rates.mtn_dew_s * mul * dt;
     boi.bed_pan += boi.rates.bed_pan_s * Math.abs(pizza_delta);
 
+    if (boi.mtn_dew <= 0 || boi.pizza <= 0)
+    {
+        boi.hp -= boi.rates.hp_drain_s * dt;
+    }
+    
     boi.pizza = Math.max(0, boi.pizza);
     boi.mtn_dew = Math.max(0, boi.mtn_dew);
     boi.bed_pan = Math.max(0, boi.bed_pan);
+    boi.hp = Math.max(0, boi.hp);
+
 
     if (last_dew > 0.5 && boi.mtn_dew <= 0.5)
     {
@@ -691,6 +699,8 @@ g.web.draw(function (dt)
     draw_gauge('image/pizza-ui', scale, game.state.bb_boi.pizza);
     draw_gauge('image/dew-ui', scale, game.state.bb_boi.mtn_dew);
     draw_gauge('image/daiper-ui', scale, game.state.bb_boi.bed_pan);
+    draw_gauge('image/daiper-ui', scale, game.state.bb_boi.hp); // TODO: replace with asset
+
 
     gl.enable(gl.DEPTH_TEST);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
