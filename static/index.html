@@ -392,21 +392,21 @@ function bb_boi_tick(boi, dt)
         switch(item.name)
         {
             case "voxel/item-dew":
-                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 4)
+                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 10)
                 {
                     game.state.items.splice(i, 1);
                     boi.mtn_dew = Math.max(0, boi.mtn_dew + 0.25);
                 }
                 break;
             case "voxel/item-pizza":
-                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 4)
+                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 10)
                 {
                     game.state.items.splice(i, 1);
                     boi.pizza = Math.max(0, boi.pizza + 0.25);
                 }
                 break;
             case "voxel/item-diaper":
-                if (item.pos.sub(game.state.diaper_consumers[0].position).len() < 4)
+                if (item.pos.sub(game.state.diaper_consumers[0].position).len() < 6)
                 {
                     game.state.items.splice(i, 1);
                 }
