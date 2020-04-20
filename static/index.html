@@ -40,15 +40,31 @@ var game = {
             mtn_dew: 1,
             sound: {},
             rates: {
-                pizza_s: 0.01,
-                bed_pan_s: 0.75,
+                pizza_s: 0.02,
+                bed_pan_s: 0.33,
                 mtn_dew_s: 0.04
             },
             get_daipies: function() { return 1; }
         },
+        pizza_spawners: [],
+        pizza_consumers: [],
+        dew_spawners: [],
+        dew_consumers: [],
+        diaper_spawners: [],
+        diaper_consumers: [],
         items: []
     }
 }
+
+game.state.items.intersecting = function(pos)
+{
+    for (var i = this.length; i--;)
+    {
+        if (pos.sub(this[i].pos).len() < 4) { return true;}
+    }
+
+    return false;
+};
 
 function game_item(asset_name, pos)
 {
@@ -163,7 +179,7 @@ g.initialize(function ()
     'sounds/cracking-a-cold-one.m4a',
     'sounds/fap.m4a',
     'sounds/gaming.m4a',
-    'sounds/mom-comming.m4a',
+    'sounds/mom-coming.m4a',
     'sounds/mtn-dew.m4a',
     'sounds/pizza.m4a',
     'sounds/shuffle.m4a',
@@ -171,6 +187,8 @@ g.initialize(function ()
     'sounds/toilet.m4a',
     'sounds/basement.mp3'
     ];
+
+
 
     game.state.player.cam.perspective();
     game.state.player.cam.position(game.state.player.pos);
@@ -199,16 +217,15 @@ g.initialize(function ()
         game.state.player.hands = new g.web.assets['animation/hands']();
         game.state.player.hands.set('Walk');
 
-        game.state.items.push(new game_item('voxel/item-pizza', [32, 13, 20]));
-        game.state.items.push(new game_item('voxel/item-dew', [38, 13, 20]));
-        game.state.items.push(new game_item('voxel/item-diaper', [28, 13, 20]));
-
         // game.test_sound = new g.web.assets['sound/angry-boi']([32, 13, 20]);
         // game.test_sound.play();
 
         game.state.player.sound.shuffle = new g.web.assets['sound/shuffle']([32, 14, 32]);
         game.state.player.sound.shuffle.gain(0.75);
         game.state.player.sound.shuffle.loop(true);
+
+        game.state.player.sound.coming = new g.web.assets['sound/mom-coming']([32, 14, 32]);
+        game.state.player.sound.coming.gain(0.75);
         // game.state.player.sound.shuffle.play();
 
         game.state.bb_boi.sound.fap = new g.web.assets['sound/fap']([25, 7, 40]);
@@ -219,12 +236,42 @@ g.initialize(function ()
         game.state.bb_boi.sound.gaming.gain(4);
         game.state.bb_boi.sound.gaming.play();
 
+        game.state.bb_boi.sound.dew = new g.web.assets['sound/mtn-dew']([25, 7, 40]);
+        game.state.bb_boi.sound.dew.gain(6);
+
+        game.state.bb_boi.sound.pizza = new g.web.assets['sound/pizza']([25, 7, 40]);
+        game.state.bb_boi.sound.pizza.gain(6);
+
+        game.state.bb_boi.sound.toilet = new g.web.assets['sound/toilet']([25, 7, 40]);
+        game.state.bb_boi.sound.toilet.gain(6);
+
         game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 0, 40]);
         game.state.bb_boi.sound.basement.loop(true);
         game.state.bb_boi.sound.basement.gain(0.25);
         game.state.bb_boi.sound.basement.panner.rolloffFactor = 1;
         game.state.bb_boi.sound.basement.play();
 
+        const apt = g.web.assets['voxel/apt'];
+        for (var i = apt.locations.length; i--;)
+        {
+            const location = apt.locations[i];
+            if (location.color.sub([0, 255, 0]).len() <= 0.01)
+            {
+                game.state.dew_spawners.push(location);
+            }
+            else if (location.color.sub([0, 254, 0]).len() <= 0.01)
+            {
+                game.state.dew_consumers.push(location);
+            }
+            else if (location.color.sub([255, 0, 0]).len() <= 0.01)
+            {
+                game.state.pizza_spawners.push(location);
+            }
+            else if (location.color.sub([254, 0, 0]).len() <= 0.01)
+            {
+                game.state.pizza_consumers.push(location);
+            }
+        }
     });
 
 	return true;
@@ -234,6 +281,11 @@ g.web.pointer.on_press(function (e)
 {
     g.web._canvas.requestPointerLock();
     var player = game.state.player;
+
+    if (Math.random() < 0.25)
+    {
+        game.state.player.sound.coming.play();        
+    }
 
     switch(e.button)
     {
@@ -294,9 +346,33 @@ function bb_boi_tick(boi, dt)
 {
     const mul = boi.get_daipies();
     const pizza_delta = boi.rates.pizza_s * mul * dt;
+
+    const last_dew = boi.mtn_dew;
+    const last_pizza = boi.pizza;
+    const last_bed_pan = boi.bed_pan;
+
     boi.pizza -= pizza_delta;
     boi.mtn_dew -= boi.rates.mtn_dew_s * mul * dt;
-    boi.bed_pan += boi.rates.bed_pan_s * pizza_delta * dt;
+    boi.bed_pan += boi.rates.bed_pan_s * Math.abs(pizza_delta);
+
+    boi.pizza = Math.max(0, boi.pizza);
+    boi.mtn_dew = Math.max(0, boi.mtn_dew);
+    boi.bed_pan = Math.max(0, boi.bed_pan);
+
+    if (last_dew > 0.5 && boi.mtn_dew <= 0.5)
+    {
+        game.state.bb_boi.sound.dew.play();
+    }
+
+    if (last_pizza > 0.25 && boi.pizza <= 0.25)
+    {
+        game.state.bb_boi.sound.pizza.play();
+    }
+
+    if (last_bed_pan < 0.3 && boi.bed_pan >= 0.3)
+    {
+        game.state.bb_boi.sound.toilet.play();
+    }
 }
 
 function player_movement(dt)
@@ -336,6 +412,7 @@ function player_movement(dt)
         }
 
         game.state.player.sound.shuffle.position(game.state.player.cam.position());
+        game.state.player.sound.coming.position(game.state.player.cam.position());
     }
     else
     {
@@ -422,9 +499,31 @@ g.update(function (dt)
 {
     if (dt > 1) { return; }
 
+    bb_boi_tick(game.state.bb_boi, dt);
     player_movement(dt);
     game.state.player.hands.tick(dt);
     player_grabbed_item();
+
+    if (game.state.items.length < 20)
+    {
+        for (var i = game.state.dew_spawners.length; i--;)
+        {
+            const location = game.state.dew_spawners[i];
+            if (!game.state.items.intersecting(location.position))
+            {
+                game.state.items.push(new game_item('voxel/item-dew', location.position))
+            }
+        }
+
+        for (var i = game.state.pizza_spawners.length; i--;)
+        {
+            const location =  game.state.pizza_spawners[i];
+            if (!game.state.items.intersecting(location.position))
+            {
+                game.state.items.push(new game_item('voxel/item-pizza', location.position))
+            }
+        }
+    }
 
     for (var i = game.state.items.length; i--;)
     {

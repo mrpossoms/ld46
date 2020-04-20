@@ -507,7 +507,7 @@ g.web = {
 									color: [col.r, col.g, col.b]
 								});
 							}
-							else
+							// else
 							{
 								cells[set.x][set.z][set.y] = set.c;								
 							}
