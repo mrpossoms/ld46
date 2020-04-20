@@ -41,7 +41,7 @@ var game = {
             sound: {},
             rates: {
                 pizza_s: 0.02,
-                bed_pan_s: 0.33,
+                bed_pan_s: 1,//0.33,
                 mtn_dew_s: 0.04
             },
             get_daipies: function() { return 1; }
@@ -60,7 +60,11 @@ game.state.items.intersecting = function(pos)
 {
     for (var i = this.length; i--;)
     {
-        if (pos.sub(this[i].pos).len() < 4) { return true;}
+        const delta = pos.sub(this[i].pos);
+        if (delta.len() < 4)
+        {
+            return true;
+        }
     }
 
     return false;
@@ -259,17 +263,27 @@ g.initialize(function ()
             {
                 game.state.dew_spawners.push(location);
             }
-            else if (location.color.sub([0, 254, 0]).len() <= 0.01)
+            if (location.color.sub([0, 254, 0]).len() <= 0.01)
             {
                 game.state.dew_consumers.push(location);
             }
-            else if (location.color.sub([255, 0, 0]).len() <= 0.01)
+
+            if (location.color.sub([255, 0, 0]).len() <= 0.01)
             {
                 game.state.pizza_spawners.push(location);
             }
-            else if (location.color.sub([254, 0, 0]).len() <= 0.01)
+            if (location.color.sub([254, 0, 0]).len() <= 0.01)
             {
                 game.state.pizza_consumers.push(location);
+            }
+
+            if (location.color.sub([0, 0, 255]).len() <= 0.01)
+            {
+                game.state.diaper_spawners.push(location);
+            }
+            if (location.color.sub([0, 0, 254]).len() <= 0.01)
+            {
+                game.state.diaper_consumers.push(location);
             }
         }
     });
@@ -351,6 +365,35 @@ function bb_boi_tick(boi, dt)
     const last_pizza = boi.pizza;
     const last_bed_pan = boi.bed_pan;
 
+    for (var i = game.state.items.length; i--;)
+    {
+        var item = game.state.items[i];
+        switch(item.name)
+        {
+            case "voxel/item-dew":
+                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 4)
+                {
+                    game.state.items.splice(i, 1);
+                    boi.mtn_dew = Math.max(0, boi.mtn_dew + 0.25);
+                }
+                break;
+            case "voxel/item-pizza":
+                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 4)
+                {
+                    game.state.items.splice(i, 1);
+                    boi.pizza = Math.max(0, boi.pizza + 0.25);
+                }
+                break;
+            case "voxel/item-diaper":
+                if (item.pos.sub(game.state.diaper_consumers[0].position).len() < 4)
+                {
+                    game.state.items.splice(i, 1);
+                }
+                break;
+        }
+
+    }
+
     boi.pizza -= pizza_delta;
     boi.mtn_dew -= boi.rates.mtn_dew_s * mul * dt;
     boi.bed_pan += boi.rates.bed_pan_s * Math.abs(pizza_delta);
@@ -369,9 +412,20 @@ function bb_boi_tick(boi, dt)
         game.state.bb_boi.sound.pizza.play();
     }
 
-    if (last_bed_pan < 0.3 && boi.bed_pan >= 0.3)
+    if (last_bed_pan < 0.75 && boi.bed_pan >= 0.75)
     {
         game.state.bb_boi.sound.toilet.play();
+        // var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0].position);
+        // poo.vel = [].random_unit().mul(20).add([0, 0, 40]);
+        // game.state.items.push(poo);
+    }
+
+    if (boi.bed_pan >= 1)
+    {
+        var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0].position);
+        poo.vel = [].random_unit().mul(20).add([0, 0, 40]);
+        game.state.items.push(poo);
+        boi.bed_pan = 0;
     }
 }
 
@@ -504,23 +558,24 @@ g.update(function (dt)
     game.state.player.hands.tick(dt);
     player_grabbed_item();
 
-    if (game.state.items.length < 20)
+    if (game.state.items.length < 100)
     {
         for (var i = game.state.dew_spawners.length; i--;)
         {
             const location = game.state.dew_spawners[i];
             if (!game.state.items.intersecting(location.position))
             {
-                game.state.items.push(new game_item('voxel/item-dew', location.position))
+                game.state.items.push(new game_item('voxel/item-dew', location.position));
             }
         }
 
         for (var i = game.state.pizza_spawners.length; i--;)
         {
-            const location =  game.state.pizza_spawners[i];
+            const location = game.state.pizza_spawners[i];
             if (!game.state.items.intersecting(location.position))
             {
-                game.state.items.push(new game_item('voxel/item-pizza', location.position))
+                const p = location.position;
+                game.state.items.push(new game_item('voxel/item-pizza', location.position));
             }
         }
     }

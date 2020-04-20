@@ -503,11 +503,11 @@ g.web = {
 							if (col.r >= 254 || col.g >= 254 || col.b >= 254)
 							{
 								locations.push({
-									position: [set.x, set.y, set.z],
+									position: [set.x, set.z, set.y],
 									color: [col.r, col.g, col.b]
 								});
 							}
-							// else
+							else
 							{
 								cells[set.x][set.z][set.y] = set.c;								
 							}
