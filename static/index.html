@@ -42,7 +42,8 @@ var game = {
             rates: {
                 pizza_s: 0.01,
                 bed_pan_s: 1,//0.33,
-                mtn_dew_s: 0.02
+                mtn_dew_s: 0.03,
+                hp_drain_s: 0.02,
             },
             get_daipies: function()
             {
@@ -104,16 +105,18 @@ function game_item(asset_name, pos)
         const cells = this.asset.cells;
         const s = this.asset.scale;
 
-        this.offset = [cells.length, cells[0].length, cells[0][0].length].mul(0.5 * s);
+        this.offset = [cells.length, 0, cells[0][0].length].mul(0.5 * s);
 
         try
         {
+            var pos = this.pos.sub(this.offset);
             for (var xi = 0; xi < cells.length; xi++)
             for (var yi = 0; yi < cells[xi].length; yi++)
             for (var zi = 0; zi < cells[xi][yi].length; zi++)
             {
-                const x_t0 = Math.floor(this.pos[0] + xi * s), y_t0 = Math.floor(this.pos[1] + yi * s), z_t0 = Math.floor(this.pos[2] + zi * s);
-                var tmp_pos = this.pos.add(this.vel.mul(dt));
+                const x_t0 = Math.floor(pos[0] + xi * s), y_t0 = Math.floor(pos[1] + yi * s), z_t0 = Math.floor(pos[2] + zi * s);
+                var tmp_pos = pos.add(this.vel.mul(dt));
+                // const _tmp_pos = tmp_pos.sub(this.offset);
                 const x_t1 = Math.floor(tmp_pos[0] + xi * s), y_t1 = Math.floor(tmp_pos[1] + yi * s), z_t1 = Math.floor(tmp_pos[2] + zi * s);
                 const n = [x_t1 - x_t0, y_t1 - y_t0, z_t1 - z_t0].norm();
 
@@ -146,13 +149,13 @@ function game_item(asset_name, pos)
 
         if (!bounced)
         {
-            this.pos = tmp_pos;
+            this.pos = this.pos.add(this.vel.mul(dt));
         }
     };
 
     this.draw = function()
     {
-        const model = this.ori.quat_inverse().quat_to_matrix().mat_mul([].translate(this.pos));//.transpose();
+        const model = this.ori.quat_inverse().quat_to_matrix().mat_mul([].translate(this.pos.sub(this.offset)));//.transpose();
         this.asset.using_shader('basic_colored')
                   .with_attribute({name:'a_position', buffer: 'positions', components: 3})
                   .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
@@ -187,10 +190,12 @@ g.initialize(function ()
     'voxels/item-pizza.json',
     'voxels/item-dew.json',
     'animations/hands.json',
+    'animations/ui.json',
     'image/hands.pixelated.clamped.png',
     'image/ui.pixelated.clamped.png',
     'image/pizza-ui.pixelated.clamped.png',
     'image/daiper-ui.pixelated.clamped.png',
+    'image/heart-ui.pixelated.clamped.png',
     'image/dew-ui.pixelated.clamped.png',
     'sounds/angry-boi.m4a',
     'sounds/big-boy-mommy.m4a',
@@ -207,6 +212,7 @@ g.initialize(function ()
     'sounds/slurp.m4a',
     'sounds/toilet.m4a',
     'sounds/poop.m4a',
+    'sounds/death.m4a',
     'sounds/basement.mp3'
     ];
 
@@ -235,6 +241,10 @@ g.initialize(function ()
         g.is_running = true;
         gl.getExtension('OES_element_index_uint');
         gl.enable(gl.BLEND);
+
+        game.state.ui_sprite = new g.web.assets['animation/ui']();
+        game.state.ui_sprite.set('ui');
+        game.state.ui_sprite.tick(0.1);
 
         game.state.player.hands = new g.web.assets['animation/hands']();
         game.state.player.hands.set('Walk');
@@ -269,6 +279,9 @@ g.initialize(function ()
 
         game.state.bb_boi.sound.poop = new g.web.assets['sound/poop']([25, 7, 40]);
         game.state.bb_boi.sound.poop.gain(8);
+
+        game.state.bb_boi.sound.death = new g.web.assets['sound/death']([25, 7, 40]);
+        game.state.bb_boi.sound.death.gain(10);
 
         game.state.bb_boi.sound.basement = new g.web.assets['sound/basement']([25, 0, 40]);
         game.state.bb_boi.sound.basement.loop(true);
@@ -317,11 +330,6 @@ g.web.pointer.on_press(function (e)
     g.web._canvas.requestPointerLock();
     var player = game.state.player;
 
-    if (Math.random() < 0.25)
-    {
-        game.state.player.sound.coming.play();        
-    }
-
     switch(e.button)
     {
         case 0:
@@ -340,6 +348,11 @@ g.web.pointer.on_press(function (e)
                     const t = player.cam.forward().mul(-1).intersects_sphere(item.pos.sub(pos), 4);
                     if (t !== false && t.len() < 14)
                     {
+                        if (Math.random() <= 0.1)
+                        {
+                            game.state.player.sound.coming.play();        
+                        }
+
                         player.grabbed_item = item;
                         item.vel = [0,0,0];
                         break;
@@ -385,6 +398,9 @@ function bb_boi_tick(boi, dt)
     const last_dew = boi.mtn_dew;
     const last_pizza = boi.pizza;
     const last_bed_pan = boi.bed_pan;
+    const last_hp = boi.hp;
+
+    if (last_hp <= 0) { return; }
 
     for (var i = game.state.items.length; i--;)
     {
@@ -392,21 +408,24 @@ function bb_boi_tick(boi, dt)
         switch(item.name)
         {
             case "voxel/item-dew":
-                if (item.pos.sub(game.state.dew_consumers[0].position).len() < 15)
+                for(var j = game.state.dew_consumers.length; j--;)
+                if (item.pos.sub(game.state.dew_consumers[j].position).len() < 15)
                 {
                     game.state.items.splice(i, 1);
                     boi.mtn_dew = Math.max(0, boi.mtn_dew + 0.25);
                 }
                 break;
             case "voxel/item-pizza":
-                if (item.pos.sub(game.state.pizza_consumers[0].position).len() < 15)
+                for(var j = game.state.pizza_consumers.length; j--;)
+                if (item.pos.sub(game.state.pizza_consumers[j].position).len() < 15)
                 {
                     game.state.items.splice(i, 1);
                     boi.pizza = Math.max(0, boi.pizza + 0.25);
                 }
                 break;
             case "voxel/item-diaper":
-                if (item.pos.sub(game.state.diaper_consumers[0].position).len() < 6)
+                for(var j = game.state.diaper_consumers.length; j--;)
+                if (item.pos.sub(game.state.diaper_consumers[j].position).len() < 6)
                 {
                     game.state.items.splice(i, 1);
                 }
@@ -419,9 +438,26 @@ function bb_boi_tick(boi, dt)
     boi.mtn_dew -= boi.rates.mtn_dew_s * mul * dt;
     boi.bed_pan += boi.rates.bed_pan_s * Math.abs(pizza_delta);
 
+    if (boi.mtn_dew <= 0 || boi.pizza <= 0)
+    {
+        boi.hp -= boi.rates.hp_drain_s * dt;
+
+        if (last_hp > 0 && boi.hp <= 0)
+        {
+            for (var sound_name in boi.sound)
+            {
+                if (sound_name == 'basement') { continue; }
+                boi.sound[sound_name].pause();
+            }
+            game.state.bb_boi.sound.death.play();
+        }
+    }
+    
     boi.pizza = Math.max(0, boi.pizza);
     boi.mtn_dew = Math.max(0, boi.mtn_dew);
     boi.bed_pan = Math.max(0, boi.bed_pan);
+    boi.hp = Math.max(0, boi.hp);
+
 
     if (last_dew > 0.5 && boi.mtn_dew <= 0.5)
     {
@@ -560,11 +596,11 @@ function player_grabbed_item()
     if (grabbed_item)
     {
         const off_left = cam.left().mul(grabbed_item.offset[0]);
-        const off_up = cam.up().mul(grabbed_item.offset[1]);
+        const off_up = cam.up().mul(-1);
         const off_forward = cam.forward().mul(grabbed_item.offset[2]);
         const off = off_left.add(off_up).add(off_forward);
-        grabbed_item.pos = cam.position().sub(off).add(cam.forward().mul(-6));
-        grabbed_item.ori = cam.orientation();
+        grabbed_item.pos = cam.position().add(cam.forward().mul(-6)).add(off_up);//.sub(off);
+        //grabbed_item.ori = cam.orientation();
     }
 }
 
@@ -630,8 +666,14 @@ g.web.draw(function (dt)
 
     const asset = g.web.assets
     
+    var apt = asset['voxel/apt'];
 
-    asset['voxel/apt']
+    if (game.state.bb_boi.hp < 1)
+    {
+        apt = asset['voxel/apt']; // update with death scene
+    }
+    
+    apt
         .using_shader('basic_colored')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
@@ -673,8 +715,9 @@ g.web.draw(function (dt)
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
 
-    scale[0][0] = 2; scale[1][1] = 0.25 * g.web.gfx.aspect();
-    scale = scale.mat_mul([].translate([0, -0.876, 0]));
+    // const ui_sprite = game.state.ui_sprite; 
+    scale[0][0] = 2/g.web.gfx.aspect(); scale[1][1] = 0.25;
+    scale = scale.mat_mul([].translate([0, -0.875, 0]));
     asset['mesh/plane']
         .using_shader('basic_textured')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
@@ -691,6 +734,8 @@ g.web.draw(function (dt)
     draw_gauge('image/pizza-ui', scale, game.state.bb_boi.pizza);
     draw_gauge('image/dew-ui', scale, game.state.bb_boi.mtn_dew);
     draw_gauge('image/daiper-ui', scale, game.state.bb_boi.bed_pan);
+    draw_gauge('image/heart-ui', scale, game.state.bb_boi.hp);
+
 
     gl.enable(gl.DEPTH_TEST);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

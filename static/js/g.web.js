@@ -858,6 +858,10 @@ g.web = {
 								{
 									this.audio.play();
 								}
+								this.stop = function()
+								{
+									this.audio.stop();
+								}
 								this.resume = function()
 								{
 									this.audio.resume();
