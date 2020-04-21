@@ -156,7 +156,7 @@ function game_item(asset_name, pos)
     this.draw = function()
     {
         const model = this.ori.quat_inverse().quat_to_matrix().mat_mul([].translate(this.pos.sub(this.offset)));//.transpose();
-        this.asset.using_shader('basic_colored')
+        this.asset.gl_mesh.using_shader('basic_colored')
                   .with_attribute({name:'a_position', buffer: 'positions', components: 3})
                   .with_attribute({name:'a_normal', buffer: 'normals', components: 3})
                   .with_attribute({name:'a_color', buffer: 'colors', components: 3})
@@ -334,38 +334,6 @@ g.initialize(function ()
         game.state.bb_boi.sound.basement.gain(0.25);
         game.state.bb_boi.sound.basement.panner.rolloffFactor = 1;
         game.state.bb_boi.sound.basement.play();
-
-        const apt = g.web.assets['voxel/apt.spawners'];
-        for (var i = apt.locations.length; i--;)
-        {
-            const location = apt.locations[i];
-            if (location.color.sub([0, 255, 0]).len() <= 0.01)
-            {
-                game.state.dew_spawners.push(location);
-            }
-            if (location.color.sub([0, 254, 0]).len() <= 0.01)
-            {
-                game.state.dew_consumers.push(location);
-            }
-
-            if (location.color.sub([255, 0, 0]).len() <= 0.01)
-            {
-                game.state.pizza_spawners.push(location);
-            }
-            if (location.color.sub([254, 0, 0]).len() <= 0.01)
-            {
-                game.state.pizza_consumers.push(location);
-            }
-
-            if (location.color.sub([0, 0, 255]).len() <= 0.01)
-            {
-                game.state.diaper_spawners.push(location);
-            }
-            if (location.color.sub([0, 0, 254]).len() <= 0.01)
-            {
-                game.state.diaper_consumers.push(location);
-            }
-        }
     });
 
 	return true;
@@ -712,11 +680,11 @@ g.web.draw(function (dt)
 
     const asset = g.web.assets
     
-    var apt = asset['voxel/apt.spawners'];
+    var apt = asset['voxel/apt.spawners'].gl_mesh;
 
     if (game.state.bb_boi.hp < 0.01)
     {
-        apt = asset['voxel/apt-dead.spawners']; // update with death scene
+        apt = asset['voxel/apt-dead.spawners'].gl_mesh; // update with death scene
     }
     
     apt
