@@ -47,20 +47,15 @@ var game = {
             },
             get_daipies: function()
             {
+                var origin = game.state.diaper_spawners[0];
                 var count = 0;
-                for (var i = game.state.items.length; i--;)
-                {
-                    var item = game.state.items[i];
-                    switch(item.name)
+                game.state.items.within_sphere(origin.concat(20), 'pos', (i) => {
+                    if (game.state.items[i].name == 'voxel/item-diaper')
                     {
-                        case "voxel/item-diaper":
-                            if (item.pos.sub(game.state.diaper_spawners[0].position).len() < 20)
-                            {
-                                count += 1;
-                            }
-                            break;
+                        count += 1;                        
                     }
-                } 
+                });
+
                 return count;
             }
         },
@@ -481,7 +476,7 @@ function bb_boi_tick(boi, dt)
 
     if (boi.bed_pan >= 1)
     {
-        var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0].position);
+        var poo = new game_item('voxel/item-diaper', game.state.diaper_spawners[0]);
         poo.vel = [].random_unit().mul(20).add([0, 0, 40]);
         game.state.items.push(poo);
         game.state.bb_boi.sound.poop.play();
@@ -601,12 +596,8 @@ function player_grabbed_item()
     const cam = game.state.player.cam;
     if (grabbed_item)
     {
-        const off_left = cam.left().mul(grabbed_item.offset[0]);
         const off_up = cam.up().mul(-1);
-        const off_forward = cam.forward().mul(grabbed_item.offset[2]);
-        const off = off_left.add(off_up).add(off_forward);
         grabbed_item.pos = cam.position().add(cam.forward().mul(-6)).add(off_up);//.sub(off);
-        //grabbed_item.ori = cam.orientation();
     }
 }
 
@@ -657,9 +648,8 @@ function draw_gauge(tex, model, value)
         .using_shader('basic_textured')
         .with_attribute({name:'a_position', buffer: 'positions', components: 3})
         .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
-        .set_uniform('u_texture').texture(g.web.assets[tex])
+        .with_aspect_correct_2d(g.web.assets[tex], model)
         .set_uniform('u_percentage').float(value)
-        .set_uniform('u_model').mat4(model)
         .draw_tri_strip();
 }
 
@@ -721,30 +711,14 @@ g.web.draw(function (dt)
         .set_uniform('u_origin_size').vec4(game.state.player.hands.origin().concat(game.state.player.hands.size()))
         .draw_tri_strip();
 
-    // const ui_sprite = game.state.ui_sprite; 
-    scale[0][0] = 2/g.web.gfx.aspect(); scale[1][1] = 0.25;
-    scale = scale.mat_mul([].translate([0, -0.875, 0]));
-    asset['mesh/plane']
-        .using_shader('basic_textured')
-        .with_attribute({name:'a_position', buffer: 'positions', components: 3})
-        .with_attribute({name:'a_tex_coord', buffer: 'texture_coords', components: 2})
-        .set_uniform('u_texture').texture(asset['image/ui'])
-        .set_uniform('u_percentage').float(1.0)
-        .set_uniform('u_model').mat4(scale)
-        .set_uniform('u_proj').mat4([].I(4))
-        .set_uniform('u_view').mat4([].I(4))
-        .draw_tri_strip();
-
-    
-
-    draw_gauge('image/pizza-ui', scale, game.state.bb_boi.pizza);
-    draw_gauge('image/dew-ui', scale, game.state.bb_boi.mtn_dew);
-    draw_gauge('image/daiper-ui', scale, game.state.bb_boi.bed_pan);
-    draw_gauge('image/heart-ui', scale, game.state.bb_boi.hp);
-
+    const ui_trans = [].mat_scale([3, 3, 1]).mat_mul([].translate([0, -0.875, 0]));
+    draw_gauge('image/ui', ui_trans, 1.0);
+    draw_gauge('image/pizza-ui', ui_trans, game.state.bb_boi.pizza);
+    draw_gauge('image/dew-ui', ui_trans, game.state.bb_boi.mtn_dew);
+    draw_gauge('image/daiper-ui', ui_trans, game.state.bb_boi.bed_pan);
+    draw_gauge('image/heart-ui', ui_trans, game.state.bb_boi.hp);
 
     gl.enable(gl.DEPTH_TEST);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 });
 
 g.start();
